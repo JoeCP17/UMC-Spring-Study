@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.math.BigDecimal;
 
 
 @Getter // 해당 클래스에 대한 접근자 생성
@@ -19,7 +20,8 @@ import lombok.Setter;
  */
 public class GetUserRes {
     private int userIdx;
-    private String nickname;
-    private String email;
-    private String password;
+    private String nickName;
+    private String phoneNum;
+    private BigDecimal mannerTemp;
+    private String userDong;
 }
