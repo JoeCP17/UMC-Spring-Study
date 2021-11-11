@@ -95,51 +95,68 @@ public class UserDao {
                         rs.getString("password"),
                         rs.getString("nickName"),
                         rs.getBigDecimal("mannerTemp"),
-                        rs.getString("userDong")
-
-                        ), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
+                        rs.getString("userDong")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
                 getPwdParams
         ); // 한 개의 회원정보를 얻기 위한 jdbcTemplate 함수(Query, 객체 매핑 정보, Params)의 결과 반환
     }
 
     // User 테이블에 존재하는 전체 유저들의 정보 조회
     public List<GetUserRes> getUsers() {
-        String getUsersQuery = "select * from User"; //User 테이블에 존재하는 모든 회원들의 정보를 조회하는 쿼리
+        String getUsersQuery = "SELECT U.userIdx, I.imgUrl userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
+                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt " +
+                "FROM User U LEFT JOIN Image I " +
+                "ON U.userIdx = I.userIdx"; //User 테이블에 존재하는 모든 회원들의 정보를 조회하는 쿼리
         return this.jdbcTemplate.query(getUsersQuery,
                 (rs, rowNum) -> new GetUserRes(
                         rs.getInt("userIdx"),
+                        rs.getString("userImgUrl"),
                         rs.getString("nickName"),
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
-                        rs.getString("userDong")) // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
+                        rs.getString("userDong"),
+                        rs.getInt("saleProductCnt")) // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
         ); // 복수개의 회원정보들을 얻기 위해 jdbcTemplate 함수(Query, 객체 매핑 정보)의 결과 반환(동적쿼리가 아니므로 Parmas부분이 없음)
     }
 
     // 해당 nickname을 갖는 유저들의 정보 조회
     public List<GetUserRes> getUsersByNickname(String nickname) {
-        String getUsersByNicknameQuery = "select * from User where nickName =?"; // 해당 닉네임을 만족하는 유저를 조회하는 쿼리문
+        String getUsersByNicknameQuery = "SELECT U.userIdx, I.imgUrl userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
+                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt " +
+                "FROM User U LEFT JOIN Image I " +
+                "ON U.userIdx = I.userIdx " +
+                "WHERE U.nickName = ?"; // 해당 닉네임을 만족하는 유저를 조회하는 쿼리문
         String getUsersByNicknameParams = nickname;
         return this.jdbcTemplate.query(getUsersByNicknameQuery,
                 (rs, rowNum) -> new GetUserRes(
                         rs.getInt("userIdx"),
+                        rs.getString("userImgUrl"),
                         rs.getString("nickName"),
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
-                        rs.getString("userDong")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
+                        rs.getString("userDong"),
+                        rs.getInt("saleProductCnt")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
                 getUsersByNicknameParams); // 해당 닉네임을 갖는 모든 User 정보를 얻기 위해 jdbcTemplate 함수(Query, 객체 매핑 정보, Params)의 결과 반환
     }
 
     // 해당 userIdx를 갖는 유저조회
     public GetUserRes getUser(int userIdx) {
-        String getUserQuery = "select * from User where userIdx = ?"; // 해당 userIdx를 만족하는 유저를 조회하는 쿼리문
+        String getUserQuery = "SELECT U.userIdx, I.imgUrl as userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
+                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) as saleProductCnt " +
+                "FROM User U LEFT JOIN Image I " +
+                "ON U.userIdx = I.userIdx " +
+                "WHERE U.userIdx = ?"; // 해당 userIdx를 만족하는 유저를 조회하는 쿼리문
+
+
         int getUserParams = userIdx;
         return this.jdbcTemplate.queryForObject(getUserQuery,
                 (rs, rowNum) -> new GetUserRes(
                         rs.getInt("userIdx"),
+                        rs.getString("userImgUrl"),
                         rs.getString("nickName"),
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
-                        rs.getString("userDong")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
+                        rs.getString("userDong"),
+                        rs.getInt("saleProductCnt")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
                 getUserParams); // 한 개의 회원정보를 얻기 위한 jdbcTemplate 함수(Query, 객체 매핑 정보, Params)의 결과 반환
     }
 }

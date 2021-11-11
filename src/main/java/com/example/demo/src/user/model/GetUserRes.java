@@ -20,8 +20,10 @@ import java.math.BigDecimal;
  */
 public class GetUserRes {
     private int userIdx;
+    private String userImgUrl;
     private String nickName;
     private String phoneNum;
     private BigDecimal mannerTemp;
     private String userDong;
+    private int saleProductCnt;
 }
