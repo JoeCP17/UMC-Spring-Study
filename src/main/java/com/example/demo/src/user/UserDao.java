@@ -69,7 +69,7 @@ public class UserDao {
     //휴대폰 번호 확인
     public int checkPhoneNum(String phoneNum) {
         String checkPhoneNumQuery = "select exists(select phoneNum from User where phoneNum = ?)"; // User Table에 해당 phoneNum 값을 갖는 유저 정보가 존재하는가?
-        String checkPhoneNumParams = phoneNum; // 해당(확인할) 이메일 값
+        String checkPhoneNumParams = phoneNum; // 해당(확인할) 휴대폰번호 값
         return this.jdbcTemplate.queryForObject(checkPhoneNumQuery,
                 int.class,
                 checkPhoneNumParams); // checkPhoneNumQuery, checkPhoneNumParams를 통해 가져온 값(intgud)을 반환한다. -> 쿼리문의 결과(존재하지 않음(False,0),존재함(True, 1))를 int형(0,1)으로 반환됩니다.

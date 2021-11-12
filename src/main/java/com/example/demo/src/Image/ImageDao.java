@@ -1,11 +1,14 @@
 package com.example.demo.src.Image;
 
+import com.example.demo.src.Image.model.GetImageRes;
 import com.example.demo.src.Image.model.PostImageReq;
+import com.example.demo.src.product.model.GetProductListRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 @Repository
 public class ImageDao {
@@ -25,6 +28,27 @@ public class ImageDao {
         return this.jdbcTemplate.queryForObject(lastInserIdQuery, int.class); // 해당 쿼리문의 결과 마지막으로 삽인된 유저의 userIdx번호를 반환한다.
     }
 
+    //이미지 조회
+    public List<String> getImageList(String imgCategory, int idx) {
+        String getImageListQuery = "";
+        switch (imgCategory) {
+            case "post":
+                getImageListQuery = "SELECT imgUrl FROM Image WHERE postIdx = ?";
+                break;
+            case "product":
+                getImageListQuery = "SELECT imgUrl FROM Image WHERE productIdx = ?";
+                break;
+            case "user":
+                getImageListQuery = "SELECT imgUrl FROM Image WHERE userIdx = ?";
+                break;
+            default:
+                return null;
+        }
+        int getIdxParams = idx;
+        return this.jdbcTemplate.query(getImageListQuery,
+                (rs, rowNum) -> rs.getString("imgUrl"), getIdxParams);
+    }
+
     // 이미지 삭제
     public int deleteImage(String imgCategory, int idx) {
         String deleteImageQuery = "";
@@ -39,8 +63,7 @@ public class ImageDao {
                 deleteImageQuery = "DELETE FROM Image WHERE userIdx = ?";
                 break;
             default:
-                deleteImageQuery = "fail";
-                break;
+                return 0;
         }
         int getIdxParams = idx;
         return this.jdbcTemplate.update(deleteImageQuery, getIdxParams);

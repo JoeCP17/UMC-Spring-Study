@@ -1,8 +1,10 @@
 package com.example.demo.src.product;
 
 import com.example.demo.config.BaseException;
+import com.example.demo.src.product.model.GetProductRes;
 import com.example.demo.src.product.model.PostProductReq;
 import com.example.demo.src.product.model.PostProductRes;
+import com.example.demo.src.product.model.PutProductReq;
 import com.example.demo.src.user.model.PostUserRes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +33,15 @@ public class ProductService {
         try {
             int productIdx = productDao.createProduct(postProductReq);
             return new PostProductRes(productIdx);
+        } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 상품수정
+    public GetProductRes editProduct(PutProductReq putProductReq) throws BaseException {
+        try {
+            return productDao.editProduct(putProductReq);
         } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
             throw new BaseException(DATABASE_ERROR);
         }
