@@ -52,6 +52,9 @@ public class UserProvider {
 
         if (postLoginReq.getPassword().equals(password)) { //비말번호가 일치한다면 userIdx를 가져온다.
             int userIdx = userDao.getPwd(postLoginReq).getUserIdx();
+            if (userDao.getUser(userIdx).getStatus() != "active"){ // 탈퇴한 회원이면 에러메세지를 출력한다.
+                throw new BaseException(USERS_STATUS_NOT_ACTIVE);
+            }
             return new PostLoginRes(userIdx);
 //  *********** 해당 부분은 7주차 - JWT 수업 후 주석해제 및 대체해주세요!  **************** //
 //            String jwt = jwtService.createJwt(userIdx);
@@ -104,5 +107,6 @@ public class UserProvider {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
 
 }

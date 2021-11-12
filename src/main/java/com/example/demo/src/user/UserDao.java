@@ -56,8 +56,8 @@ public class UserDao {
 
     // 회원가입
     public int createUser(PostUserReq postUserReq) {
-        String createUserQuery = "insert into User (nickName, password, phoneNum) VALUES (?,?,?)"; // 실행될 동적 쿼리문
-        Object[] createUserParams = new Object[]{postUserReq.getPhoneNum(), postUserReq.getNickName()}; // 동적 쿼리의 ?부분에 주입될 값
+        String createUserQuery = "insert into User (nickName, password, phoneNum, userDong) VALUES (?,?,?,?)"; // 실행될 동적 쿼리문
+        Object[] createUserParams = new Object[]{postUserReq.getNickName(),postUserReq.getPassword(),postUserReq.getPhoneNum(),postUserReq.getUserDong()}; // 동적 쿼리의 ?부분에 주입될 값
         this.jdbcTemplate.update(createUserQuery, createUserParams);
         // email -> postUserReq.getEmail(), password -> postUserReq.getPassword(), nickname -> postUserReq.getNickname() 로 매핑(대응)시킨다음 쿼리문을 실행한다.
         // 즉 DB의 User Table에 (email, password, nickname)값을 가지는 유저 데이터를 삽입(생성)한다.
@@ -85,7 +85,7 @@ public class UserDao {
 
     // 로그인: 해당 phoneNum에 해당되는 user의 암호화된 비밀번호 값을 가져온다.
     public User getPwd(PostLoginReq postLoginReq) {
-        String getPwdQuery = "select userIdx,password,phoneNum,nickName,mannerTemp,userDong from User where phoneNum = ?"; // 해당 email을 만족하는 User의 정보들을 조회한다.
+        String getPwdQuery = "select * from User where phoneNum = ?"; // 해당 email을 만족하는 User의 정보들을 조회한다.
         String getPwdParams = postLoginReq.getPhoneNum(); // 주입될 phoneNum값을 클라이언트의 요청에서 주어진 정보를 통해 가져온다.
 
         return this.jdbcTemplate.queryForObject(getPwdQuery,
@@ -95,7 +95,10 @@ public class UserDao {
                         rs.getString("password"),
                         rs.getString("nickName"),
                         rs.getBigDecimal("mannerTemp"),
-                        rs.getString("userDong")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
+                        rs.getString("userDong"),
+                        rs.getString("status"),
+                        rs.getTimestamp("createAt"),
+                        rs.getTimestamp("updateAt")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
                 getPwdParams
         ); // 한 개의 회원정보를 얻기 위한 jdbcTemplate 함수(Query, 객체 매핑 정보, Params)의 결과 반환
     }
@@ -114,7 +117,8 @@ public class UserDao {
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
                         rs.getString("userDong"),
-                        rs.getInt("saleProductCnt")) // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
+                        rs.getInt("saleProductCnt"),
+                        rs.getString("status")) // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
         ); // 복수개의 회원정보들을 얻기 위해 jdbcTemplate 함수(Query, 객체 매핑 정보)의 결과 반환(동적쿼리가 아니므로 Parmas부분이 없음)
     }
 
@@ -134,7 +138,8 @@ public class UserDao {
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
                         rs.getString("userDong"),
-                        rs.getInt("saleProductCnt")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
+                        rs.getInt("saleProductCnt"),
+                        rs.getString("status")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
                 getUsersByNicknameParams); // 해당 닉네임을 갖는 모든 User 정보를 얻기 위해 jdbcTemplate 함수(Query, 객체 매핑 정보, Params)의 결과 반환
     }
 
@@ -156,7 +161,15 @@ public class UserDao {
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
                         rs.getString("userDong"),
-                        rs.getInt("saleProductCnt")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
+                        rs.getInt("saleProductCnt"),
+                        rs.getString("status")), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
                 getUserParams); // 한 개의 회원정보를 얻기 위한 jdbcTemplate 함수(Query, 객체 매핑 정보, Params)의 결과 반환
+    }
+
+    //해당 userIdx를 갖는 유저 삭제
+    public int deleteUser(int userIdx){
+        String deleteUserQuery = "DELETE FROM User WHERE userIdx = ?";
+        int getUserParams = userIdx;
+        return this.jdbcTemplate.update(deleteUserQuery, getUserParams);
     }
 }

@@ -26,4 +26,5 @@ public class GetUserRes {
     private BigDecimal mannerTemp;
     private String userDong;
     private int saleProductCnt;
+    private String status;
 }
