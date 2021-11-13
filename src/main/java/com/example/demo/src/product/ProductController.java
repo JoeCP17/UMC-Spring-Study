@@ -69,6 +69,9 @@ public class ProductController {
     /**
      * 상품 전체 조회 API
      * [GET] /app/products
+     * 
+     * 상품 검색
+     * /app/products?search=검색타이틀
      */
     @ResponseBody
     @GetMapping("")

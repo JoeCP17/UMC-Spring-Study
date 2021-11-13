@@ -106,7 +106,7 @@ public class UserDao {
     // User 테이블에 존재하는 전체 유저들의 정보 조회
     public List<GetUserRes> getUsers() {
         String getUsersQuery = "SELECT U.userIdx, I.imgUrl userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
-                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt " +
+                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt , U.status " +
                 "FROM User U LEFT JOIN Image I " +
                 "ON U.userIdx = I.userIdx"; //User 테이블에 존재하는 모든 회원들의 정보를 조회하는 쿼리
         return this.jdbcTemplate.query(getUsersQuery,
@@ -125,7 +125,7 @@ public class UserDao {
     // 해당 nickname을 갖는 유저들의 정보 조회
     public List<GetUserRes> getUsersByNickname(String nickname) {
         String getUsersByNicknameQuery = "SELECT U.userIdx, I.imgUrl userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
-                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt " +
+                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt, U.status " +
                 "FROM User U LEFT JOIN Image I " +
                 "ON U.userIdx = I.userIdx " +
                 "WHERE U.nickName = ?"; // 해당 닉네임을 만족하는 유저를 조회하는 쿼리문
@@ -145,12 +145,11 @@ public class UserDao {
 
     // 해당 userIdx를 갖는 유저조회
     public GetUserRes getUser(int userIdx) {
-        String getUserQuery = "SELECT U.userIdx, I.imgUrl as userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
-                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) as saleProductCnt " +
+        String getUserQuery = "SELECT U.userIdx, I.imgUrl userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
+                "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt, U.status " +
                 "FROM User U LEFT JOIN Image I " +
                 "ON U.userIdx = I.userIdx " +
                 "WHERE U.userIdx = ?"; // 해당 userIdx를 만족하는 유저를 조회하는 쿼리문
-
 
         int getUserParams = userIdx;
         return this.jdbcTemplate.queryForObject(getUserQuery,
@@ -171,5 +170,12 @@ public class UserDao {
         String deleteUserQuery = "DELETE FROM User WHERE userIdx = ?";
         int getUserParams = userIdx;
         return this.jdbcTemplate.update(deleteUserQuery, getUserParams);
+    }
+
+    //해당 userIdx를 갖는 유저 상태 변경 (탈퇴)
+    public int withdraw(int userIdx){
+        String withdrawQuery = "Update User set status = 'withdraw' where userIdx = ?";
+        int getUserParams = userIdx;
+        return this.jdbcTemplate.update(withdrawQuery, getUserParams);
     }
 }

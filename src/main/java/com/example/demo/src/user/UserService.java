@@ -80,11 +80,11 @@ public class UserService {
         }
     }
 
-    // 해당 userIdx를 갖는 User 삭제
-    public int deleteUser(int userIdx) throws BaseException{
+    // 해당 userIdx를 갖는 User 탈퇴 (status 변경)
+    public int withdraw(int userIdx) throws BaseException{
         try {
-            int deleteUserCnt = userDao.deleteUser(userIdx);
-            return deleteUserCnt;
+            int withdrawUserCnt = userDao.withdraw(userIdx);
+            return withdrawUserCnt;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }

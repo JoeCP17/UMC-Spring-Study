@@ -90,9 +90,9 @@ public class ProductDao {
         return this.jdbcTemplate.query(getProductsQuery,
                 (rs, rowNum) -> new GetProductListRes(
                         rs.getInt("productIdx"),
+                        rs.getString("imgUrl"),
                         rs.getString("title"),
                         rs.getString("userDong"),
-                        rs.getString("imgUrl"),
                         rs.getString("status"),
                         rs.getTimestamp("updateAt"),
                         rs.getInt("price")),getProductTitleParams);

@@ -162,14 +162,14 @@ public class UserController {
 
     /**
      * 회원 탈퇴 API
-     *  [DELETE] /users/:userIdx
+     *  [GET] /users/withdraw/:userIdx
      */
     @ResponseBody
-    @DeleteMapping("/{userIdx}")
+    @GetMapping("/withdraw/{userIdx}")
     public BaseResponse<Integer> deleteUser(@PathVariable("userIdx") int userIdx) {
         try {
-            int deleteCnt = userService.deleteUser(userIdx);
-            return new BaseResponse<>(deleteCnt);
+            int withdrawUserCnt = userService.withdraw(userIdx);
+            return new BaseResponse<>(withdrawUserCnt);
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
         }
