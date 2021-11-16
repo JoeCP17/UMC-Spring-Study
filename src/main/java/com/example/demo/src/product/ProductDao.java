@@ -1,9 +1,6 @@
 package com.example.demo.src.product;
 
-import com.example.demo.src.product.model.GetProductListRes;
-import com.example.demo.src.product.model.GetProductRes;
-import com.example.demo.src.product.model.PostProductReq;
-import com.example.demo.src.product.model.PutProductReq;
+import com.example.demo.src.product.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -39,10 +36,10 @@ public class ProductDao {
     }
 
     // 상품 수정
-    public GetProductRes editProduct(PutProductReq putProductReq) {
-        String editProductQuery = "update Product set categoryIdx=?, title=?, price=?, content=? where productIdx=?"; // 실행될 동적 쿼리문
-        Object[] editProductParams = new Object[]{putProductReq.getCategoryIdx(),putProductReq.getTitle(), putProductReq.getPrice(), putProductReq.getContent(),putProductReq.getProductIdx()}; // 동적 쿼리의 ?부분에 주입될 값
-        this.jdbcTemplate.update(editProductQuery, editProductParams);
+    public void modifyProduct(PutProductReq putProductReq) {
+        String modifyProductQuery = "update Product set categoryIdx=?, title=?, price=?, content=? where productIdx=?"; // 실행될 동적 쿼리문
+        Object[] modifyProductParams = new Object[]{putProductReq.getCategoryIdx(),putProductReq.getTitle(), putProductReq.getPrice(), putProductReq.getContent(),putProductReq.getProductIdx()}; // 동적 쿼리의 ?부분에 주입될 값
+        this.jdbcTemplate.update(modifyProductQuery, modifyProductParams);
 
         // 이미지 수정
         this.jdbcTemplate.update("DELETE FROM Image where productIdx = ?",putProductReq.getProductIdx());// 기존 이미지들 삭제
@@ -51,7 +48,13 @@ public class ProductDao {
             Object[] createImgParams = new Object[]{"product",imgUrl,putProductReq.getProductIdx()}; // 동적 쿼리의 ?부분에 주입될 값
             this.jdbcTemplate.update(createImgQuery, createImgParams);
         }
-        return getProduct(putProductReq.getProductIdx());
+    }
+
+    // 상품 상태 수정
+    public void modifyProductStatus(PatchProductReq patchProductReq) {
+        String modifyProductQuery = "update Product set status=? where productIdx=?"; // 실행될 동적 쿼리문
+        Object[] modifyProductParams = new Object[]{patchProductReq.getStatus(), patchProductReq.getProductIdx()}; // 동적 쿼리의 ?부분에 주입될 값
+        this.jdbcTemplate.update(modifyProductQuery, modifyProductParams);
     }
 
 
@@ -96,6 +99,27 @@ public class ProductDao {
                         rs.getString("status"),
                         rs.getTimestamp("updateAt"),
                         rs.getInt("price")),getProductTitleParams);
+    }
+
+    //현재 판매중인 상품만 조회
+    public List<GetProductListRes> getActiveProductList(){
+        String getProductsQuery = "SELECT P.productIdx, P.title, U.userDong, " +
+                "(SELECT I.imgUrl from Image I where I.productIdx = P.productIdx limit 1) imgUrl, " +
+                "P.status, P.updateAt, P.price " +
+                "FROM Product P JOIN User U " +
+                "ON P.userIdx = U.userIdx " +
+                "WHERE P.status = 'active'" +
+                "ORDER BY P.updateAt DESC";
+
+        return this.jdbcTemplate.query(getProductsQuery,
+                (rs, rowNum) -> new GetProductListRes(
+                        rs.getInt("productIdx"),
+                        rs.getString("imgUrl"),
+                        rs.getString("title"),
+                        rs.getString("userDong"),
+                        rs.getString("status"),
+                        rs.getTimestamp("updateAt"),
+                        rs.getInt("price")));
     }
 
     //상품 상세 조회

@@ -2,16 +2,17 @@ package com.example.demo.src.product;
 
 import com.example.demo.config.BaseException;
 import com.example.demo.config.BaseResponse;
-import com.example.demo.src.Image.ImageProvider;
-import com.example.demo.src.Image.ImageService;
+import com.example.demo.src.image.ImageProvider;
+import com.example.demo.src.image.ImageService;
 import com.example.demo.src.product.model.*;
-import com.example.demo.src.user.model.GetUserRes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.example.demo.config.BaseResponseStatus.PATCH_USERS_INVALID_STATUS;
 
 @RestController
 @RequestMapping("/app/products")
@@ -57,10 +58,11 @@ public class ProductController {
     //Body
     @ResponseBody
     @PutMapping("/{productIdx}")
-    public BaseResponse<GetProductRes> editProduct(@PathVariable("productIdx") int productIdx, @RequestBody PutProductReq putProductReq){
+    public BaseResponse<String> editProduct(@PathVariable("productIdx") int productIdx, @RequestBody PutProductReq putProductReq){
         try {
-            GetProductRes getProductRes = productService.editProduct(putProductReq);
-            return new BaseResponse<>(getProductRes);
+            productService.modifyProduct(putProductReq);
+            String result = "상품정보가 수정되었습니다.";
+            return new BaseResponse<>(result);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
         }
@@ -81,7 +83,6 @@ public class ProductController {
                 List<GetProductListRes> productListRes = productProvider.getProductList();
                 return new BaseResponse<>(productListRes);
             }
-            System.out.println(search);
             // query string인 search가 있을 경우, title 에서 검색한다..
             List<GetProductListRes> productListRes = productProvider.getProductsByTitle(search);
             return new BaseResponse<>(productListRes);
@@ -90,6 +91,45 @@ public class ProductController {
         }
     }
 
+    /**
+     * 현재 판매중인 상품만 조회 API
+     * [GET] /app/products/active
+     */
+    @ResponseBody
+    @GetMapping("/active")
+    public BaseResponse<List<GetProductListRes>> getActiveProduct(){
+        try {
+            List<GetProductListRes> productListRes = productProvider.getActiveProducts();
+            return new BaseResponse<>(productListRes);
+        } catch (BaseException exception) {
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
+
+    /**
+     * 상품 상태 변경 API
+     * [PATCH] /app/products/:productIdx/status
+     */
+    //body
+    @ResponseBody
+    @PatchMapping("/{productIdx}/status")
+    public BaseResponse<String> modifyProductStatus(@PathVariable("productIdx") int productIdx, @RequestBody Product product){
+        try {
+            PatchProductReq patchProductReq = new PatchProductReq(productIdx, product.getStatus());
+            String status = patchProductReq.getStatus();
+            if (status.equals(ProductStatus.active.toString()) || status.equals(ProductStatus.reserved.toString())){
+                productService.modifyProductStatus(patchProductReq);
+                String result = "상품 상태가 수정되었습니다.";
+                return new BaseResponse<>(result);
+            } else {
+                throw new BaseException(PATCH_USERS_INVALID_STATUS);
+            }
+        } catch (BaseException exception) {
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
+
+
 
     /**
      * 상품 삭제 API
@@ -97,7 +137,7 @@ public class ProductController {
      */
     @ResponseBody
     @DeleteMapping("/{productIdx}")
-    public BaseResponse<DeleteProductRes > deleteUser(@PathVariable("productIdx") int productIdx) {
+    public BaseResponse<DeleteProductRes> deleteUser(@PathVariable("productIdx") int productIdx) {
         try {
             DeleteProductRes deleteProductRes = new DeleteProductRes(productService.deleteProduct(productIdx),imageService.deleteProductImage(productIdx));
             return new BaseResponse<>(deleteProductRes);

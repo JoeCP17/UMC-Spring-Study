@@ -1,14 +1,13 @@
 package com.example.demo.src.product.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
 @Setter
 @Getter
 @AllArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PutProductReq {
     private int productIdx;
     private int categoryIdx;

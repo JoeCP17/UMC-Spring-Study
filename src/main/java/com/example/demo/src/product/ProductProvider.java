@@ -1,13 +1,8 @@
 package com.example.demo.src.product;
 
 import com.example.demo.config.BaseException;
-import com.example.demo.src.Image.ImageDao;
-import com.example.demo.src.Image.ImageProvider;
 import com.example.demo.src.product.model.GetProductListRes;
 import com.example.demo.src.product.model.GetProductRes;
-import com.example.demo.src.user.UserDao;
-import com.example.demo.src.user.model.GetUserRes;
-import com.example.demo.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,7 +24,7 @@ public class ProductProvider {
         this.productDao = productDao;
     }
 
-    // 특정 사움 상세 조회
+    // 특정 상품 상세 조회
     public GetProductRes getProduct(int productIdx){
         GetProductRes productRes = productDao.getProduct(productIdx);
         return productRes;
@@ -45,6 +40,16 @@ public class ProductProvider {
     public List<GetProductListRes> getProductsByTitle(String title) throws BaseException {
         try {
             List<GetProductListRes> getProductListRes = productDao.getProductListByTitle(title);
+            return getProductListRes ;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 판매중인 상품만 조회
+    public List<GetProductListRes> getActiveProducts() throws BaseException {
+        try {
+            List<GetProductListRes> getProductListRes = productDao.getActiveProductList();
             return getProductListRes ;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);

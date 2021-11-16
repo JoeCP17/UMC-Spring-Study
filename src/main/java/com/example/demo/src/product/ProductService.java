@@ -1,10 +1,7 @@
 package com.example.demo.src.product;
 
 import com.example.demo.config.BaseException;
-import com.example.demo.src.product.model.GetProductRes;
-import com.example.demo.src.product.model.PostProductReq;
-import com.example.demo.src.product.model.PostProductRes;
-import com.example.demo.src.product.model.PutProductReq;
+import com.example.demo.src.product.model.*;
 import com.example.demo.src.user.model.PostUserRes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,13 +36,23 @@ public class ProductService {
     }
 
     // 상품수정
-    public GetProductRes editProduct(PutProductReq putProductReq) throws BaseException {
+    public void modifyProduct(PutProductReq putProductReq) throws BaseException {
         try {
-            return productDao.editProduct(putProductReq);
+            productDao.modifyProduct(putProductReq);
         } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
+    // 상품 상태 수정
+    public void modifyProductStatus(PatchProductReq patchProductReq) throws BaseException {
+        try {
+            productDao.modifyProductStatus(patchProductReq);
+        } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
 
 
     // 해당 productIdx를 갖는 Product 삭제
