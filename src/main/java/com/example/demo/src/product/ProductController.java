@@ -4,12 +4,15 @@ import com.example.demo.config.BaseException;
 import com.example.demo.config.BaseResponse;
 import com.example.demo.src.image.ImageProvider;
 import com.example.demo.src.image.ImageService;
+import com.example.demo.src.image.model.GetImageRes;
+import com.example.demo.src.image.model.PostImageReq;
 import com.example.demo.src.product.model.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.example.demo.config.BaseResponseStatus.PATCH_USERS_INVALID_STATUS;
@@ -45,6 +48,13 @@ public class ProductController {
     public BaseResponse<PostProductRes> createProduct(@RequestBody PostProductReq postProductReq){
         try {
             PostProductRes postProductRes = productService.createProduct(postProductReq);
+            // 이미지 등록
+            for (String imgUrl : postProductReq.getImgUrlList()){
+                imageService.createProductImage(new PostImageReq(
+                        imgUrl,
+                        postProductRes.getProductIdx()
+                ));
+            }
             return new BaseResponse<>(postProductRes);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
@@ -77,15 +87,25 @@ public class ProductController {
      */
     @ResponseBody
     @GetMapping("")
-    public BaseResponse<List<GetProductListRes>> getProduct(@RequestParam(required = false) String search){
+    public BaseResponse<List<GetProductPreviewRes>> getProduct(@RequestParam(required = false) String search){
         try {
             if (search == null) { // query string인 search가 없을 경우, 그냥 전체 상품정보를 불러온다.
-                List<GetProductListRes> productListRes = productProvider.getProductList();
-                return new BaseResponse<>(productListRes);
+                List<GetProductPreviewRes> getProductPreviewResList = productProvider.getAllProducts();
+                for(GetProductPreviewRes getProductPreviewRes : getProductPreviewResList){
+                    getProductPreviewRes.setImgUrl(
+                            imageProvider.getOneProductImage(getProductPreviewRes.getProductIdx()).getImgUrl()
+                    );
+                }
+                return new BaseResponse<>(getProductPreviewResList);
             }
             // query string인 search가 있을 경우, title 에서 검색한다..
-            List<GetProductListRes> productListRes = productProvider.getProductsByTitle(search);
-            return new BaseResponse<>(productListRes);
+            List<GetProductPreviewRes> getProductPreviewResList = productProvider.getProductsByTitle(search);
+            for(GetProductPreviewRes getProductPreviewRes : getProductPreviewResList){
+                getProductPreviewRes.setImgUrl(
+                        imageProvider.getOneProductImage(getProductPreviewRes.getProductIdx()).getImgUrl()
+                );
+            }
+            return new BaseResponse<>(getProductPreviewResList);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
         }
@@ -97,9 +117,9 @@ public class ProductController {
      */
     @ResponseBody
     @GetMapping("/active")
-    public BaseResponse<List<GetProductListRes>> getActiveProduct(){
+    public BaseResponse<List<GetProductPreviewRes>> getActiveProduct(){
         try {
-            List<GetProductListRes> productListRes = productProvider.getActiveProducts();
+            List<GetProductPreviewRes> productListRes = productProvider.getActiveProducts();
             return new BaseResponse<>(productListRes);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
@@ -155,8 +175,43 @@ public class ProductController {
     public BaseResponse<GetProductRes> getProduct(@PathVariable("productIdx") int productIdx){
         try {
             GetProductRes productRes = productProvider.getProduct(productIdx);
-            productRes.setProductImgUrlList(imageProvider.getImages("product",productIdx));
+            List<String> imgUrlList = new ArrayList<>();
+            for(GetImageRes getImageRes : imageProvider.getProductImages(productIdx)){
+                imgUrlList.add(getImageRes.getImgUrl());
+            }
+            productRes.setProductImgUrlList(imgUrlList);
             return new BaseResponse<>(productRes);
+        } catch (BaseException exception) {
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
+
+
+    /**
+     * 특정 판매자의 구매 내역 조회
+     * [GET] /app/products/seller/:userIdx
+     */
+    @ResponseBody
+    @GetMapping("/seller/{userIdx}")
+    public BaseResponse<List<GetProductPreviewRes>> getProductsBySeller(@PathVariable("userIdx") int userIdx){
+        try {
+            List<GetProductPreviewRes> productListRes = productProvider.getProductsBySeller(userIdx);
+            return new BaseResponse<>(productListRes);
+        } catch (BaseException exception) {
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
+
+    /**
+     * 특정 구매자의 구매 내역 조회
+     * [GET] /app/products/buyer/:userIdx
+     */
+    @ResponseBody
+    @GetMapping("/buyer/{userIdx}")
+    public BaseResponse<List<GetProductPreviewRes>> getProductsByBuyer(@PathVariable("userIdx") int userIdx){
+        try {
+            List<GetProductPreviewRes> productListRes = productProvider.getProductsByBuyer(userIdx);
+            return new BaseResponse<>(productListRes);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
         }

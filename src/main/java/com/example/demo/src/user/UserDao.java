@@ -178,4 +178,11 @@ public class UserDao {
         int getUserParams = userIdx;
         return this.jdbcTemplate.update(withdrawQuery, getUserParams);
     }
+
+    //해당 userIdx를 갖는 유저의 userDong 조회
+    public int getUserDong(int userIdx){
+        String getUserDongQuery = "select userDong from User where userIdx = ?";
+        int getUserParams = userIdx;
+        return this.jdbcTemplate.update(getUserDongQuery, getUserParams);
+    }
 }

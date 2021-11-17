@@ -31,7 +31,10 @@ public enum BaseResponseStatus {
     POST_USERS_INVALID_PHONENUM(false, 2016, "휴대폰번호 형식을 확인해주세요."),
     POST_USERS_EXISTS_PHONENUM(false,2017,"중복된 휴대폰번호입니다."),
 
+    // products
 
+    // [PATCH] products
+    PATCH_USERS_INVALID_STATUS(false, 2025, "유효하지 않은 상태 값입니다."),
 
     /**
      * 3000 : Response 오류

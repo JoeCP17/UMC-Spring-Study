@@ -1,8 +1,7 @@
-package com.example.demo.src.Image;
+package com.example.demo.src.image;
 
 import com.example.demo.config.BaseException;
-import com.example.demo.src.Image.model.GetImageRes;
-import com.example.demo.src.user.model.GetUserRes;
+import com.example.demo.src.image.model.GetImageRes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,10 +22,30 @@ public class ImageProvider {
         this.imageDAO = imageDAO;
     }
 
-    // Image 조회
-    public List<String> getImages(String category, int idx) throws BaseException {
+    // 상품 이미지들 조회
+    public List<GetImageRes> getProductImages(int productIdx) throws BaseException {
         try {
-            List<String> getImageRes = imageDAO.getImageList(category, idx);
+            List<GetImageRes> getImagesRes = imageDAO.getProductImages(productIdx);
+            return getImagesRes;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 상품 대표 이미지 조회
+    public GetImageRes getOneProductImage(int productIdx) throws BaseException {
+        try {
+            GetImageRes getImageRes = imageDAO.getOneProductImage(productIdx);
+            return getImageRes;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 유저 이미지 조회
+    public GetImageRes getUserImage(int userIdx) throws BaseException {
+        try {
+            GetImageRes getImageRes = imageDAO.getUserImage(userIdx);
             return getImageRes;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);

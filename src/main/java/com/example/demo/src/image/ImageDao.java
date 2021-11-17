@@ -1,8 +1,8 @@
-package com.example.demo.src.Image;
+package com.example.demo.src.image;
 
-import com.example.demo.src.Image.model.GetImageRes;
-import com.example.demo.src.Image.model.PostImageReq;
-import com.example.demo.src.product.model.GetProductListRes;
+import com.example.demo.src.image.model.GetImageRes;
+import com.example.demo.src.image.model.PostImageReq;
+import com.example.demo.src.user.model.GetUserRes;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -19,34 +19,44 @@ public class ImageDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    // 이미지 등록
-    public int createImage(PostImageReq postImageReq){
-        String createImageQuery = "insert into Image (imgUrl, imgCategory, productIdx, postIdx, userIdx) VALUES (?,?,?,?,?)";
-        Object[] createImageParams = new Object[]{postImageReq.getImgUrl(), postImageReq.getImgCategory(), postImageReq.getProductIdx(), postImageReq.getPostIdx(), postImageReq.getUserIdx()}; // 동적 쿼리의 ?부분에 주입될 값
-        this.jdbcTemplate.update(createImageQuery, createImageParams);
+    // 상품 이미지 등록
+    public int createProductImage(PostImageReq postImageReq){
+        String createProductImageQuery = "insert into Image (imgUrl, imgCategory, productIdx) VALUES (?,?,?)";
+        Object[] createImageParams = new Object[]{postImageReq.getImgUrl(), "product", postImageReq.getIdx()}; // 동적 쿼리의 ?부분에 주입될 값
+        this.jdbcTemplate.update(createProductImageQuery, createImageParams);
         String lastInserIdQuery = "select last_insert_id()"; // 가장 마지막에 삽입된(생성된) id값은 가져온다.
         return this.jdbcTemplate.queryForObject(lastInserIdQuery, int.class); // 해당 쿼리문의 결과 마지막으로 삽인된 유저의 userIdx번호를 반환한다.
     }
 
-    //이미지 조회
-    public List<String> getImageList(String imgCategory, int idx) {
-        String getImageListQuery = "";
-        switch (imgCategory) {
-            case "post":
-                getImageListQuery = "SELECT imgUrl FROM Image WHERE postIdx = ?";
-                break;
-            case "product":
-                getImageListQuery = "SELECT imgUrl FROM Image WHERE productIdx = ?";
-                break;
-            case "user":
-                getImageListQuery = "SELECT imgUrl FROM Image WHERE userIdx = ?";
-                break;
-            default:
-                return null;
-        }
-        int getIdxParams = idx;
-        return this.jdbcTemplate.query(getImageListQuery,
-                (rs, rowNum) -> rs.getString("imgUrl"), getIdxParams);
+    // 상품 이미지들 조회
+    public List<GetImageRes> getProductImages(int productIdx){
+        String getProductImagesQuery = "select * from Image where productIdx = ?";
+        return this.jdbcTemplate.query(getProductImagesQuery,
+                (rs, rowNum) -> new GetImageRes(
+                        rs.getInt("imgIdx"),
+                        rs.getString("imgUrl")
+                ), productIdx);
+    }
+
+    // 대표 상품 이미지 1개 조회
+    public GetImageRes getOneProductImage(int productIdx){
+        String getProductImageQuery = "select * from Image where productIdx = ? limit 1";
+        return this.jdbcTemplate.queryForObject(getProductImageQuery,
+                (rs, rowNum) -> new GetImageRes(
+                        rs.getInt("imgIdx"),
+                        rs.getString("imgUrl")
+                ), productIdx);
+    }
+
+
+    // 유저 이미지 조회
+    public GetImageRes getUserImage(int userIdx) {
+        String getUserImageQuery = "select * from Image where userIdx = ?";
+        return this.jdbcTemplate.queryForObject(getUserImageQuery,
+                (rs, rowNum) -> new GetImageRes(
+                        rs.getInt("imgIdx"),
+                        rs.getString("imgUrl")
+                ), userIdx);
     }
 
     // 이미지 삭제

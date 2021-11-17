@@ -1,4 +1,4 @@
-package com.example.demo.src.Image.model;
+package com.example.demo.src.image.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

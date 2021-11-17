@@ -1,13 +1,11 @@
-package com.example.demo.src.Image;
+package com.example.demo.src.image;
 
 import com.example.demo.config.BaseException;
-import com.example.demo.src.Image.model.GetImageRes;
+import com.example.demo.src.image.model.PostImageReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 import static com.example.demo.config.BaseResponseStatus.DATABASE_ERROR;
 
@@ -23,6 +21,16 @@ public class ImageService {
     public ImageService(ImageDao imageDao, ImageProvider imageProvider) {
         this.imageDao = imageDao;
         this.imageProvider = imageProvider;
+    }
+
+    // 상품 이미지 등록
+    public int createProductImage(PostImageReq postImageReq) throws BaseException{
+        try {
+            int imageIdx = imageDao.createProductImage(postImageReq);
+            return imageIdx;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
     }
 
     // 해당 productIdx를 갖는 이미지 삭제

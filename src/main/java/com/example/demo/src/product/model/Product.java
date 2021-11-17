@@ -13,7 +13,6 @@ import java.util.List;
 public class Product {
     private int productIdx;
     private int userIdx;
-    private List<String> productImgList;
     private int categoryIdx;
     private String title;
     private int price;
@@ -21,4 +20,5 @@ public class Product {
     private String status;
     private Timestamp createAt;
     private Timestamp updateAt;
+
 }

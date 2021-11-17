@@ -1,18 +1,11 @@
-package com.example.demo.src.Image.model;
+package com.example.demo.src.image.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
-
-import java.sql.Timestamp;
+import lombok.*;
 
 @Setter
 @Getter
 @AllArgsConstructor
 public class PostImageReq {
-    private String imgCategory;
     private String imgUrl;
-    private int productIdx;
-    private int postIdx;
-    private int userIdx;
+    private int idx;
 }

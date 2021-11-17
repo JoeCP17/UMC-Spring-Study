@@ -1,16 +1,13 @@
 package com.example.demo.src.product.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.sql.Timestamp;
-import java.util.List;
 
 @Setter
 @Getter
 @AllArgsConstructor
-public class GetProductListRes {
+public class GetProductPreviewRes {
     private int productIdx;
     private String imgUrl;
     private String title;
@@ -20,4 +17,12 @@ public class GetProductListRes {
     private int price;
     //private int likeCnt;
     //private int commentCnt;
+
+    public GetProductPreviewRes(Product product){
+        this.productIdx = product.getProductIdx();
+        this.title = product.getTitle();
+        this.status  = product.getStatus();
+        this.updateAt = product.getUpdateAt();
+        this.price = product.getPrice();
+    }
 }
