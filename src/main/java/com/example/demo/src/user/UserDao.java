@@ -75,17 +75,23 @@ public class UserDao {
                 checkPhoneNumParams); // checkPhoneNumQuery, checkPhoneNumParams를 통해 가져온 값(intgud)을 반환한다. -> 쿼리문의 결과(존재하지 않음(False,0),존재함(True, 1))를 int형(0,1)으로 반환됩니다.
     }
 
-    // 회원정보 변경
-    public int modifyUserName(PatchUserReq patchUserReq) {
+    // 닉네임 변경
+    public int modifyUserName(PutUserReq putUserReq) {
         String modifyUserNameQuery = "update User set nickname = ? where userIdx = ? "; // 해당 userIdx를 만족하는 User를 해당 nickname으로 변경한다.
-        Object[] modifyUserNameParams = new Object[]{patchUserReq.getNickname(), patchUserReq.getUserIdx()}; // 주입될 값들(nickname, userIdx) 순
-
+        Object[] modifyUserNameParams = new Object[]{putUserReq.getNickName(), putUserReq.getUserIdx()}; // 주입될 값들(nickname, userIdx) 순
         return this.jdbcTemplate.update(modifyUserNameQuery, modifyUserNameParams); // 대응시켜 매핑시켜 쿼리 요청(생성했으면 1, 실패했으면 0) 
+    }
+
+    // 동네 변경
+    public int modifyUserDong(PatchUserReq patchUserReq) {
+        String modifyUserNameQuery = "update User set userDong = ? where userIdx = ? "; // 해당 userIdx를 만족하는 User를 해당 nickname으로 변경한다.
+        Object[] modifyUserNameParams = new Object[]{patchUserReq.getUserDong(), patchUserReq.getUserIdx()}; // 주입될 값들(nickname, userIdx) 순
+        return this.jdbcTemplate.update(modifyUserNameQuery, modifyUserNameParams); // 대응시켜 매핑시켜 쿼리 요청(생성했으면 1, 실패했으면 0)
     }
 
     // 로그인: 해당 phoneNum에 해당되는 user의 암호화된 비밀번호 값을 가져온다.
     public User getPwd(PostLoginReq postLoginReq) {
-        String getPwdQuery = "select * from User where phoneNum = ?"; // 해당 email을 만족하는 User의 정보들을 조회한다.
+        String getPwdQuery = "select * from User where phoneNum = ?"; // 해당 phoneNum을 만족하는 User의 정보들을 조회한다.
         String getPwdParams = postLoginReq.getPhoneNum(); // 주입될 phoneNum값을 클라이언트의 요청에서 주어진 정보를 통해 가져온다.
 
         return this.jdbcTemplate.queryForObject(getPwdQuery,
@@ -105,14 +111,13 @@ public class UserDao {
 
     // User 테이블에 존재하는 전체 유저들의 정보 조회
     public List<GetUserRes> getUsers() {
-        String getUsersQuery = "SELECT U.userIdx, I.imgUrl userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
+        String getUsersQuery = "SELECT U.userIdx, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
                 "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt , U.status " +
-                "FROM User U LEFT JOIN Image I " +
-                "ON U.userIdx = I.userIdx"; //User 테이블에 존재하는 모든 회원들의 정보를 조회하는 쿼리
+                "FROM User U"; //User 테이블에 존재하는 모든 회원들의 정보를 조회하는 쿼리
         return this.jdbcTemplate.query(getUsersQuery,
                 (rs, rowNum) -> new GetUserRes(
                         rs.getInt("userIdx"),
-                        rs.getString("userImgUrl"),
+                        null,
                         rs.getString("nickName"),
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
@@ -124,16 +129,15 @@ public class UserDao {
 
     // 해당 nickname을 갖는 유저들의 정보 조회
     public List<GetUserRes> getUsersByNickname(String nickname) {
-        String getUsersByNicknameQuery = "SELECT U.userIdx, I.imgUrl userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
+        String getUsersByNicknameQuery = "SELECT U.userIdx, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
                 "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt, U.status " +
-                "FROM User U LEFT JOIN Image I " +
-                "ON U.userIdx = I.userIdx " +
-                "WHERE U.nickName = ?"; // 해당 닉네임을 만족하는 유저를 조회하는 쿼리문
-        String getUsersByNicknameParams = nickname;
+                "FROM User U " +
+                "WHERE U.nickName like ?"; // 해당 닉네임을 포함하는 유저를 조회하는 쿼리문
+        String getUsersByNicknameParams = "%" + nickname + "%";
         return this.jdbcTemplate.query(getUsersByNicknameQuery,
                 (rs, rowNum) -> new GetUserRes(
                         rs.getInt("userIdx"),
-                        rs.getString("userImgUrl"),
+                        null,
                         rs.getString("nickName"),
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
@@ -145,17 +149,16 @@ public class UserDao {
 
     // 해당 userIdx를 갖는 유저조회
     public GetUserRes getUser(int userIdx) {
-        String getUserQuery = "SELECT U.userIdx, I.imgUrl userImgUrl, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
+        String getUserQuery = "SELECT U.userIdx, U.nickName, U.phoneNum, U.mannerTemp, U.userDong, " +
                 "(SELECT count(P.productIdx) FROM Product P WHERE P.userIdx = U.userIdx) saleProductCnt, U.status " +
-                "FROM User U LEFT JOIN Image I " +
-                "ON U.userIdx = I.userIdx " +
+                "FROM User U " +
                 "WHERE U.userIdx = ?"; // 해당 userIdx를 만족하는 유저를 조회하는 쿼리문
 
         int getUserParams = userIdx;
         return this.jdbcTemplate.queryForObject(getUserQuery,
                 (rs, rowNum) -> new GetUserRes(
                         rs.getInt("userIdx"),
-                        rs.getString("userImgUrl"),
+                        null,
                         rs.getString("nickName"),
                         rs.getString("phoneNum"),
                         rs.getBigDecimal("mannerTemp"),
@@ -180,9 +183,10 @@ public class UserDao {
     }
 
     //해당 userIdx를 갖는 유저의 userDong 조회
-    public int getUserDong(int userIdx){
+    public String getUserDong(int userIdx){
         String getUserDongQuery = "select userDong from User where userIdx = ?";
-        int getUserParams = userIdx;
-        return this.jdbcTemplate.update(getUserDongQuery, getUserParams);
+        return this.jdbcTemplate.queryForObject(getUserDongQuery,
+                (rs, rowNum) -> rs.getString("userDong"),
+                userIdx);
     }
 }

@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 import static com.example.demo.config.BaseResponseStatus.DATABASE_ERROR;
 
 @Service
@@ -33,11 +35,38 @@ public class ImageService {
         }
     }
 
+    // 해당 productIdx를 갖는 이미지 수정
+    public void modifyProductImage(int productIdx, List<String> imgUrlList) throws BaseException{
+        try {
+            imageDao.deleteImage("product", productIdx); // 해당 상품 이미지 전체 삭제
+            for(String imgUrl : imgUrlList) {
+                imageDao.createProductImage(new PostImageReq(
+                        imgUrl,
+                        productIdx
+                ));
+            } // 상품 이미지 새로 등록
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     // 해당 productIdx를 갖는 이미지 삭제
     public int deleteProductImage(int productIdx) throws BaseException {
         try {
             int deleteImageCnt = imageDao.deleteImage("product", productIdx);
             return deleteImageCnt;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 해당 userIdx를 갖는 이미지 수정
+    public void modifyUserImage(PostImageReq postImageReq) throws BaseException{
+        try {
+            if (imageProvider.getUserImage(postImageReq.getIdx()) == null){ // 프로필 이미지가 없으면 추가
+                imageDao.createUserImage(postImageReq);
+            }
+            imageDao.modifyUserImage(postImageReq); // 프로필 이미지가 이미 있으면 수정
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }

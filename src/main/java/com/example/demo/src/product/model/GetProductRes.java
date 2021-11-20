@@ -1,5 +1,6 @@
 package com.example.demo.src.product.model;
 
+import com.example.demo.src.image.model.GetImageRes;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -23,7 +24,7 @@ public class GetProductRes {
     //product
     private int productIdx;
     private String categoryName;
-    private List<String> productImgUrlList;
+    private List<GetImageRes> productImgList;
     private String title;
     private Timestamp updateAt;
     private String status;

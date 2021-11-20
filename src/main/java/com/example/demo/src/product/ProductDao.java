@@ -1,5 +1,6 @@
 package com.example.demo.src.product;
 
+import ch.qos.logback.core.net.SyslogOutputStream;
 import com.example.demo.src.product.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -28,18 +29,10 @@ public class ProductDao {
     }
 
     // 상품 수정
-    public void modifyProduct(PutProductReq putProductReq) {
+    public void modifyProduct(int productIdx, PostProductReq postProductReq) {
         String modifyProductQuery = "update Product set categoryIdx=?, title=?, price=?, content=? where productIdx=?"; // 실행될 동적 쿼리문
-        Object[] modifyProductParams = new Object[]{putProductReq.getCategoryIdx(),putProductReq.getTitle(), putProductReq.getPrice(), putProductReq.getContent(),putProductReq.getProductIdx()}; // 동적 쿼리의 ?부분에 주입될 값
+        Object[] modifyProductParams = new Object[]{postProductReq.getCategoryIdx(),postProductReq.getTitle(), postProductReq.getPrice(), postProductReq.getContent(), productIdx}; // 동적 쿼리의 ?부분에 주입될 값
         this.jdbcTemplate.update(modifyProductQuery, modifyProductParams);
-
-        // 이미지 수정
-        this.jdbcTemplate.update("DELETE FROM Image where productIdx = ?",putProductReq.getProductIdx());// 기존 이미지들 삭제
-        String createImgQuery = "insert into Image (imgCategory,imgUrl,productIdx) VALUES (?,?,?)"; // 실행될 동적 쿼리문
-        for(String imgUrl : putProductReq.getImgUrlList()){
-            Object[] createImgParams = new Object[]{"product",imgUrl,putProductReq.getProductIdx()}; // 동적 쿼리의 ?부분에 주입될 값
-            this.jdbcTemplate.update(createImgQuery, createImgParams);
-        }
     }
 
     // 상품 상태 수정
@@ -50,54 +43,56 @@ public class ProductDao {
     }
 
 
-    //상품 전체 조회
+    //전체 상품 조회
     public List<GetProductPreviewRes> getProductPreviews(){
-        String getProductsQuery = "select * from Product order by updateAt DESC";
+        String getProductsQuery = "select P.productIdx, P.title, U.userDong, P.status, P.updateAt, P.price " +
+                "from Product P join User U " +
+                "on P.userIdx = U.userIdx " +
+                "order by P.updateAt DESC";
+
         return this.jdbcTemplate.query(getProductsQuery,
-                (rs, rowNum) -> new GetProductPreviewRes(new Product(
+                (rs, rowNum) -> new GetProductPreviewRes(
                         rs.getInt("productIdx"),
-                        rs.getInt("userIdx"),
-                        rs.getInt("categoryIdx"),
+                        null,
                         rs.getString("title"),
-                        rs.getInt("price"),
-                        rs.getString("content"),
+                        rs.getString("userDong"),
                         rs.getString("status"),
-                        rs.getTimestamp("createAt"),
-                        rs.getTimestamp("updateAt") )));
+                        rs.getTimestamp("updateAt"),
+                        rs.getInt("price")));
     }
 
     //상품 title 로 검색 (포함)
     public List<GetProductPreviewRes> getProductListByTitle(String title){
-        String getProductsQuery = "select * from Product where title Like ? order by updateAt DESC";
+        String getProductsQuery =  "select P.productIdx, P.title, U.userDong, P.status, P.updateAt, P.price "+
+                "from Product P join User U "+
+                "on P.userIdx = U.userIdx "+
+                "where title Like ? "+
+                "ORDER BY P.updateAt DESC";
 
         String getProductTitleParams = "%" + title + "%";
         return this.jdbcTemplate.query(getProductsQuery,
-                (rs, rowNum) -> new GetProductPreviewRes(new Product(
+                (rs, rowNum) -> new GetProductPreviewRes(
                         rs.getInt("productIdx"),
-                        rs.getInt("userIdx"),
-                        rs.getInt("categoryIdx"),
+                        null,
                         rs.getString("title"),
-                        rs.getInt("price"),
-                        rs.getString("content"),
+                        rs.getString("userDong"),
                         rs.getString("status"),
-                        rs.getTimestamp("createAt"),
-                        rs.getTimestamp("updateAt"))),getProductTitleParams);
+                        rs.getTimestamp("updateAt"),
+                        rs.getInt("price")),getProductTitleParams);
     }
 
     //현재 판매중인 상품만 조회
     public List<GetProductPreviewRes> getActiveProductList(){
-        String getProductsQuery = "SELECT P.productIdx, P.title, U.userDong, " +
-                "(SELECT I.imgUrl from Image I where I.productIdx = P.productIdx limit 1) imgUrl, " +
-                "P.status, P.updateAt, P.price " +
+        String getProductsQuery = "SELECT P.productIdx, P.title, U.userDong, P.status, P.updateAt, P.price " +
                 "FROM Product P JOIN User U " +
                 "ON P.userIdx = U.userIdx " +
-                "WHERE P.status = 'active'" +
+                "WHERE P.status = 'active' " +
                 "ORDER BY P.updateAt DESC";
 
         return this.jdbcTemplate.query(getProductsQuery,
                 (rs, rowNum) -> new GetProductPreviewRes(
                         rs.getInt("productIdx"),
-                        rs.getString("imgUrl"),
+                        null,
                         rs.getString("title"),
                         rs.getString("userDong"),
                         rs.getString("status"),
@@ -107,13 +102,13 @@ public class ProductDao {
 
     //상품 상세 조회
     public GetProductRes getProduct(int productIdx){
-        String getProductQuery = "SELECT P.userIdx, (SELECT I.imgUrl FROM Image I WHERE U.userIdx = I.userIdx) userImgUrl, " +
-                "U.nickName, U.userDong, U.mannerTemp, P.productIdx, P.title, " +
+        String getProductQuery = "SELECT P.userIdx, (SELECT I.imgUrl FROM Image I WHERE U.userIdx = I.userIdx) userImgUrl, "+
+                "U.nickName, U.userDong, U.mannerTemp, P.productIdx, P.title, "+
                 "(SELECT C.categoryName FROM Category C WHERE C.categoryIdx = P.categoryIdx) categoryName, "+
-                "P.updateAt, P.status, P.content, P.price " +
+                "P.updateAt, P.status, P.content, P.price "+
                 "FROM Product P JOIN User U " +
                 "ON P.userIdx = U.userIdx " +
-                "WHERE P.productIdx = ?;";
+                "WHERE P.productIdx = ?";
 
 
         int getProductParams = productIdx;
@@ -146,16 +141,14 @@ public class ProductDao {
     // 특정 판매자의 판매 내역 조회
     public List<GetProductPreviewRes> getProductsBySeller(int userIdx){
         return this.jdbcTemplate.query(
-                "SELECT P.productIdx, "+
-                        "(SELECT I.imgUrl from Image I where I.productIdx = P.productIdx limit 1) imgUrl," +
-                        "P.title, U.userDong, P.status, P.updateAt, P.price " +
+                "SELECT P.productIdx, P.title, U.userDong, P.status, P.updateAt, P.price " +
                         "FROM Product P JOIN User U " +
                         "ON P.userIdx = U.userIdx " +
                         "WHERE P.userIdx = ? " +
                         "ORDER BY P.updateAt DESC",
                 (rs, rowNum) -> new GetProductPreviewRes(
                         rs.getInt("productIdx"),
-                        rs.getString("imgUrl"),
+                        null,
                         rs.getString("title"),
                         rs.getString("userDong"),
                         rs.getString("status"),
@@ -166,15 +159,13 @@ public class ProductDao {
     // 특정 구매자의 구매 내역 조회
     public List<GetProductPreviewRes> getProductsByBuyer(int userIdx){
         return this.jdbcTemplate.query(
-                "SELECT P.productIdx, "+
-                        "(SELECT I.imgUrl from Image I where I.productIdx = P.productIdx limit 1) imgUrl," +
-                        "P.title, U.userDong, P.status, P.updateAt, P.price " +
+                "SELECT P.productIdx, P.title, U.userDong, P.status, P.updateAt, P.price " +
                         "FROM Product P JOIN User U " +
                         "ON P.userIdx = U.userIdx " +
                         "WHERE P.productIdx = (SELECT productIdx from Transaction where buyer=? ORDER BY updateAt DESC)",
                 (rs, rowNum) -> new GetProductPreviewRes(
                         rs.getInt("productIdx"),
-                        rs.getString("imgUrl"),
+                        null,
                         rs.getString("title"),
                         rs.getString("userDong"),
                         rs.getString("status"),

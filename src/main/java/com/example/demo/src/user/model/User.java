@@ -15,9 +15,9 @@ import java.sql.Timestamp;
  */
 public class User {
     private int userIdx;
-    private String nickName;
     private String phoneNum;
     private String password;
+    private String nickName;
     private BigDecimal mannerTemp;
     private String userDong;
     private String status;

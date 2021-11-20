@@ -2,6 +2,8 @@ package com.example.demo.src.user;
 
 import com.example.demo.config.BaseException;
 import com.example.demo.config.secret.Secret;
+import com.example.demo.src.image.ImageProvider;
+import com.example.demo.src.product.model.GetProductPreviewRes;
 import com.example.demo.src.user.model.*;
 import com.example.demo.utils.AES128;
 import com.example.demo.utils.JwtService;
@@ -27,14 +29,16 @@ public class UserProvider {
     // *********************** 동작에 있어 필요한 요소들을 불러옵니다. *************************
     private final UserDao userDao;
     private final JwtService jwtService; // JWT부분은 7주차에 다루므로 모르셔도 됩니다!
+    private final ImageProvider imageProvider;
 
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired //readme 참고
-    public UserProvider(UserDao userDao, JwtService jwtService) {
+    public UserProvider(UserDao userDao, JwtService jwtService, ImageProvider imageProvider) {
         this.userDao = userDao;
         this.jwtService = jwtService; // JWT부분은 7주차에 다루므로 모르셔도 됩니다!
+        this.imageProvider = imageProvider;
     }
     // ******************************************************************************
 
@@ -52,15 +56,11 @@ public class UserProvider {
 
         if (postLoginReq.getPassword().equals(password)) { //비말번호가 일치한다면 userIdx를 가져온다.
             int userIdx = userDao.getPwd(postLoginReq).getUserIdx();
-            if (userDao.getUser(userIdx).getStatus() != "active"){ // 탈퇴한 회원이면 에러메세지를 출력한다.
+            if (!userDao.getUser(userIdx).getStatus().equals("active")){ // 탈퇴한 회원이면 에러메세지를 출력한다.
                 throw new BaseException(USERS_STATUS_NOT_ACTIVE);
             }
-            return new PostLoginRes(userIdx);
-//  *********** 해당 부분은 7주차 - JWT 수업 후 주석해제 및 대체해주세요!  **************** //
-//            String jwt = jwtService.createJwt(userIdx);
-//            return new PostLoginRes(userIdx,jwt);
-//  **************************************************************************
-
+            String jwt = jwtService.createJwt(userIdx);
+            return new PostLoginRes(userIdx,jwt);
         } else { // 비밀번호가 다르다면 에러메세지를 출력한다.
             throw new BaseException(FAILED_TO_LOGIN);
         }
@@ -80,18 +80,24 @@ public class UserProvider {
     // User들의 정보를 조회
     public List<GetUserRes> getUsers() throws BaseException {
         try {
-            List<GetUserRes> getUserRes = userDao.getUsers();
-            return getUserRes;
+            List<GetUserRes> getUserResList = userDao.getUsers();
+            for (GetUserRes getUserRes : getUserResList) {
+                getUserRes.setUserImg(imageProvider.getUserImage(getUserRes.getUserIdx()));
+            }
+            return getUserResList;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
     }
 
-    // 해당 nickname을 갖는 User들의 정보 조회
+    // 닉네임에 해당 nickname 문자열을 포함하는 User들의 정보 조회
     public List<GetUserRes> getUsersByNickname(String nickname) throws BaseException {
         try {
-            List<GetUserRes> getUsersRes = userDao.getUsersByNickname(nickname);
-            return getUsersRes;
+            List<GetUserRes> getUserResList = userDao.getUsersByNickname(nickname);
+            for (GetUserRes getUserRes : getUserResList) {
+                getUserRes.setUserImg(imageProvider.getUserImage(getUserRes.getUserIdx()));
+            }
+            return getUserResList;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
@@ -102,7 +108,18 @@ public class UserProvider {
     public GetUserRes getUser(int userIdx) throws BaseException {
         try {
             GetUserRes getUserRes = userDao.getUser(userIdx);
+            getUserRes.setUserImg(imageProvider.getUserImage(getUserRes.getUserIdx()));
             return getUserRes;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+
+    // 해당 userIdx를 갖는 User의 userDong 조회
+    public String getUserDong(int userIdx) throws BaseException {
+        try {
+            return userDao.getUserDong(userIdx);
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }

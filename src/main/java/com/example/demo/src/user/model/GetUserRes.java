@@ -1,6 +1,7 @@
 package com.example.demo.src.user.model;
 
 
+import com.example.demo.src.image.model.GetImageRes;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
@@ -20,7 +21,7 @@ import java.math.BigDecimal;
  */
 public class GetUserRes {
     private int userIdx;
-    private String userImgUrl;
+    private GetImageRes userImg;
     private String nickName;
     private String phoneNum;
     private BigDecimal mannerTemp;

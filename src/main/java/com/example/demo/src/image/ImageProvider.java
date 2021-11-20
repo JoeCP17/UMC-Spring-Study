@@ -22,7 +22,7 @@ public class ImageProvider {
         this.imageDAO = imageDAO;
     }
 
-    // 상품 이미지들 조회
+    // 상품 이미지들 전체 조회
     public List<GetImageRes> getProductImages(int productIdx) throws BaseException {
         try {
             List<GetImageRes> getImagesRes = imageDAO.getProductImages(productIdx);
@@ -32,11 +32,15 @@ public class ImageProvider {
         }
     }
 
-    // 상품 대표 이미지 조회
-    public GetImageRes getOneProductImage(int productIdx) throws BaseException {
+    // 상품 대표 이미지 url 조회
+    public String getOneProductImage(int productIdx) throws BaseException {
         try {
-            GetImageRes getImageRes = imageDAO.getOneProductImage(productIdx);
-            return getImageRes;
+            List<GetImageRes> getImageRes = imageDAO.getOneProductImage(productIdx);
+            if (!getImageRes.isEmpty()){
+                return getImageRes.get(0).getImgUrl();
+            } else {
+                return null;
+            }
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
@@ -45,8 +49,12 @@ public class ImageProvider {
     // 유저 이미지 조회
     public GetImageRes getUserImage(int userIdx) throws BaseException {
         try {
-            GetImageRes getImageRes = imageDAO.getUserImage(userIdx);
-            return getImageRes;
+            List<GetImageRes> getImageRes = imageDAO.getUserImage(userIdx);
+            if (!getImageRes.isEmpty()){
+                return getImageRes.get(0);
+            } else {
+                return null;
+            }
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
