@@ -2,21 +2,18 @@ package com.example.demo.src.product;
 
 import com.example.demo.config.BaseException;
 import com.example.demo.config.BaseResponse;
-import com.example.demo.src.image.ImageProvider;
-import com.example.demo.src.image.ImageService;
-import com.example.demo.src.image.model.GetImageRes;
-import com.example.demo.src.image.model.PostImageReq;
 import com.example.demo.src.product.model.*;
-import com.example.demo.src.user.UserProvider;
+import com.example.demo.src.transaction.TransactionProvider;
+import com.example.demo.src.transaction.TransactionService;
+import com.example.demo.src.transaction.model.PatchTransactionReq;
+import com.example.demo.src.transaction.model.PostTransactionReq;
+import com.example.demo.src.transaction.model.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
-
-import static com.example.demo.config.BaseResponseStatus.PATCH_USERS_INVALID_STATUS;
 
 @RestController
 @RequestMapping("/app/products")
@@ -28,12 +25,15 @@ public class ProductController {
     @Autowired
     private final ProductService productService;
     @Autowired
-    private final ImageService imageService;
+    private final TransactionProvider transactionProvider;
+    @Autowired
+    private final TransactionService transactionService;
 
-    public ProductController(ProductProvider productProvider, ProductService productService, ImageService imageService){
+    public ProductController(ProductProvider productProvider, ProductService productService, TransactionProvider transactionProvider, TransactionService transactionService){
         this.productProvider = productProvider;
         this.productService = productService;
-        this.imageService = imageService;
+        this.transactionProvider = transactionProvider;
+        this.transactionService = transactionService;
     }
 
     /**
@@ -114,17 +114,36 @@ public class ProductController {
     //body
     @ResponseBody
     @PatchMapping("/{productIdx}/status")
-    public BaseResponse<String> modifyProductStatus(@PathVariable("productIdx") int productIdx, @RequestBody Product product){
+    public BaseResponse<String> modifyProductStatus(@PathVariable("productIdx") int productIdx, @RequestBody Product product) {
         try {
-            PatchProductReq patchProductReq = new PatchProductReq(productIdx, product.getStatus());
-            String status = patchProductReq.getStatus();
-            if (status.equals(ProductStatus.active.toString()) || status.equals(ProductStatus.reserved.toString())){
-                productService.modifyProductStatus(patchProductReq);
-                String result = "상품 상태가 수정되었습니다.";
+            // 판매중으로 변경
+            String status = product.getStatus();
+            if (status.equals(ProductStatus.active.toString())) {
+                // 거래 테이블에 있으면 삭제
+                if (transactionProvider.checkProduct(productIdx) != 0) {
+                    transactionService.deleteTransactionByProduct(productIdx);
+                }
+            } else if (status.equals(ProductStatus.reserved.toString()) | status.equals(ProductStatus.completed.toString())) {
+                // 예약중 or 판매완료로 변경
+                if (transactionProvider.checkProduct(productIdx) == 0) {
+                    PostTransactionReq postTransactionReq = new PostTransactionReq(productIdx, status);
+                    transactionService.createTransaction(postTransactionReq);
+                } else { // 있으면 수정
+                    Transaction transaction = transactionProvider.getTransactionIdxByProduct(productIdx);
+                    PatchTransactionReq patchTransactionReq = new PatchTransactionReq(
+                            transaction.getProductIdx(),
+                            status
+                    );
+                    transactionService.modifyTransactionStatus(patchTransactionReq);
+                }
+            } else { // 잘못된 상태값
+                String result = "잘못된 상태값입니다.";
                 return new BaseResponse<>(result);
-            } else {
-                throw new BaseException(PATCH_USERS_INVALID_STATUS);
             }
+            PatchProductReq patchProductReq = new PatchProductReq(productIdx, status);
+            productService.modifyProductStatus(patchProductReq);
+            String result = "상품 상태가 수정되었습니다.";
+            return new BaseResponse<>(result);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
         }

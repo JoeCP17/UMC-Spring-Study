@@ -125,5 +125,14 @@ public class UserProvider {
         }
     }
 
+    // 해당 userIdx를 갖는 User의 존재 유무 조회
+    public int existUser(int userIdx) throws BaseException {
+        try {
+            return userDao.existUser(userIdx);
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
 
 }

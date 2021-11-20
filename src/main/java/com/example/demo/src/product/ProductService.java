@@ -6,14 +6,16 @@ import com.example.demo.src.image.model.PostImageReq;
 import com.example.demo.src.product.model.*;
 import com.example.demo.src.transaction.TransactionProvider;
 import com.example.demo.src.transaction.TransactionService;
+import com.example.demo.src.transaction.model.PatchTransactionReq;
 import com.example.demo.src.transaction.model.PostTransactionReq;
+import com.example.demo.src.transaction.model.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import static com.example.demo.config.BaseResponseStatus.DATABASE_ERROR;
-import static com.example.demo.config.BaseResponseStatus.PATCH_USERS_INVALID_STATUS;
+import static com.example.demo.config.BaseResponseStatus.PATCH_PRODUCTS_INVALID_STATUS;
 
 @Service
 public class ProductService {
@@ -64,18 +66,27 @@ public class ProductService {
     public void modifyProductStatus(PatchProductReq patchProductReq) throws BaseException {
         try {
             productDao.modifyProductStatus(patchProductReq);
-            /*
-            // 거래 테이블에도 반영
-            transactionService.createTransaction(new PostTransactionReq(
-                    patchProductReq.getProductIdx(),
-                    null,
-                    patchProductReq.getStatus()
-            )
-            ))
-            } else {
-                throw new BaseException(PATCH_USERS_INVALID_STATUS);
+            int productIdx = patchProductReq.getProductIdx();
+            //판매중으로 변경하려할 경우
+            if(patchProductReq.getStatus().equals(ProductStatus.active.toString())){
+                // 거래 테이블에 있으면 삭제
+                if(transactionProvider.checkProduct(productIdx) != 0){
+                    transactionService.deleteTransactionByProduct(patchProductReq.getProductIdx());
+                }
+            } else { // 예약중이나 거래 완료로 바꾼다면 거래테이블 생성
+                //거래 테이블에 없으면 생성
+                if(transactionProvider.checkProduct(productIdx) == 0){
+                    PostTransactionReq postTransactionReq = new PostTransactionReq(patchProductReq.getProductIdx(), patchProductReq.getStatus());
+                    transactionService.createTransaction(postTransactionReq);
+                } else{ // 있으면 수정
+                    PatchTransactionReq patchTransactionReq = new PatchTransactionReq(
+                            patchProductReq.getProductIdx(),
+                            patchProductReq.getStatus()
+                    );
+                    transactionService.modifyTransactionStatus(patchTransactionReq);
+                }
+
             }
-             */
         } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
             throw new BaseException(DATABASE_ERROR);
         }

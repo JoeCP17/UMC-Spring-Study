@@ -34,7 +34,11 @@ public enum BaseResponseStatus {
     // products
 
     // [PATCH] products
-    PATCH_USERS_INVALID_STATUS(false, 2025, "유효하지 않은 상태 값입니다."),
+    PATCH_PRODUCTS_INVALID_STATUS(false, 2025, "유효하지 않은 상태 값입니다."),
+
+    // Transaction
+    // [PATCH] transactions
+    PATCH_TRANSACTIONS_INVALID_BUYER(false,2030,"유효하지 않은 구매자 인덱스입니다."),
 
     /**
      * 3000 : Response 오류
@@ -58,9 +62,13 @@ public enum BaseResponseStatus {
     MODIFY_FAIL_USERNAME(false,4014,"유저네임 수정 실패"),
     //[PATCH] /users/{userIdx}
     MODIFY_FAIL_USERDONG(false,4015,"유저동네 수정 실패"),
-    
+
+
     PASSWORD_ENCRYPTION_ERROR(false, 4011, "비밀번호 암호화에 실패하였습니다."),
-    PASSWORD_DECRYPTION_ERROR(false, 4012, "비밀번호 복호화에 실패하였습니다.");
+    PASSWORD_DECRYPTION_ERROR(false, 4012, "비밀번호 복호화에 실패하였습니다."),
+
+    // transactions 상태 변경
+    MODIFY_FAIL_TRANSACTION_STATUS(false,4034,"거래상태 수정 실패");
 
 
     // 5000 : 필요시 만들어서 쓰세요

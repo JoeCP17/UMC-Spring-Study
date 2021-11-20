@@ -189,4 +189,14 @@ public class UserDao {
                 (rs, rowNum) -> rs.getString("userDong"),
                 userIdx);
     }
+
+    //해당 userIdx를 갖는 유저의 존재 유무 확인
+    public int existUser(int userIdx){
+        String existUserQuery = "select exists(select userIdx from User where userIdx = ?)";
+        int existUserParams = userIdx; // 확인할 userIdx 값
+        return this.jdbcTemplate.queryForObject(existUserQuery,
+                int.class,
+                existUserParams); // 쿼리문의 결과(존재하지 않음(False,0),존재함(True, 1))를 int형(0,1)으로 반환됩니다.
+    }
+
 }
