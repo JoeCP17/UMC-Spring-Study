@@ -14,7 +14,8 @@ public class GetProductPreviewRes {
     private String title;
     private String userDong;
     private String status;
-    private Timestamp updateAt;
+    private Timestamp pullUpAt;
+    private int pullUpCnt;
     private int price;
     //private int likeCnt;
     //private int commentCnt;

@@ -170,7 +170,6 @@ public class UserController {
             //닉네임 변경
             PutUserReq putUserReq = new PutUserReq(userIdx, postUserReq.getNickName(), postUserReq.getImgUrl());
             userService.modifyUserName(putUserReq);
-            System.out.println("와우");
             //프로필 이미지 변경
             PostImageReq postImageReq = new PostImageReq(putUserReq.getImgUrl(), putUserReq.getUserIdx());
             imageService.modifyUserImage(postImageReq);

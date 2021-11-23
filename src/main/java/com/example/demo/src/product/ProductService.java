@@ -4,18 +4,12 @@ import com.example.demo.config.BaseException;
 import com.example.demo.src.image.ImageService;
 import com.example.demo.src.image.model.PostImageReq;
 import com.example.demo.src.product.model.*;
-import com.example.demo.src.transaction.TransactionProvider;
-import com.example.demo.src.transaction.TransactionService;
-import com.example.demo.src.transaction.model.PatchTransactionReq;
-import com.example.demo.src.transaction.model.PostTransactionReq;
-import com.example.demo.src.transaction.model.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static com.example.demo.config.BaseResponseStatus.DATABASE_ERROR;
-import static com.example.demo.config.BaseResponseStatus.PATCH_PRODUCTS_INVALID_STATUS;
+import static com.example.demo.config.BaseResponseStatus.*;
 
 @Service
 public class ProductService {
@@ -24,15 +18,11 @@ public class ProductService {
 
     // *********************** 동작에 있어 필요한 요소들을 불러옵니다. *************************
     private final ProductDao productDao;
-    private final TransactionProvider transactionProvider;
-    private final TransactionService transactionService;
     private final ImageService imageService;
 
     @Autowired
-    public ProductService(ProductDao productDao, TransactionProvider transactionProvider, TransactionService transactionService, ImageService imageService) {
+    public ProductService(ProductDao productDao, ImageService imageService) {
         this.productDao = productDao;
-        this.transactionProvider = transactionProvider;
-        this.transactionService = transactionService;
         this.imageService = imageService;
     }
 
@@ -65,27 +55,17 @@ public class ProductService {
     // 상품 상태 수정
     public void modifyProductStatus(PatchProductReq patchProductReq) throws BaseException {
         try {
-            productDao.modifyProductStatus(patchProductReq);
-            int productIdx = patchProductReq.getProductIdx();
-            //판매중으로 변경하려할 경우
-            if(patchProductReq.getStatus().equals(ProductStatus.active.toString())){
-                // 거래 테이블에 있으면 삭제
-                if(transactionProvider.checkProduct(productIdx) != 0){
-                    transactionService.deleteTransactionByProduct(patchProductReq.getProductIdx());
+            String status = patchProductReq.getStatus();
+            // 상태는 acitve, reserved, completed 만 가능
+            if(status.equals(ProductStatus.active.toString()) || status.equals(ProductStatus.reserved.toString()) || status.equals(ProductStatus.completed.toString())){
+                int result = productDao.modifyProductStatus(patchProductReq); // 해당 과정이 무사히 수행되면 True(1), 그렇지 않으면 False(0)입니다.
+                if (result == 0) { // result값이 0이면 과정이 실패한 것이므로 에러 메서지를 보냅니다.
+                    throw new BaseException(MODIFY_FAIL_USERNAME);
                 }
-            } else { // 예약중이나 거래 완료로 바꾼다면 거래테이블 생성
-                //거래 테이블에 없으면 생성
-                if(transactionProvider.checkProduct(productIdx) == 0){
-                    PostTransactionReq postTransactionReq = new PostTransactionReq(patchProductReq.getProductIdx(), patchProductReq.getStatus());
-                    transactionService.createTransaction(postTransactionReq);
-                } else{ // 있으면 수정
-                    PatchTransactionReq patchTransactionReq = new PatchTransactionReq(
-                            patchProductReq.getProductIdx(),
-                            patchProductReq.getStatus()
-                    );
-                    transactionService.modifyTransactionStatus(patchTransactionReq);
-                }
-
+                // buyer 에 0 삽입
+                productDao.modifyProductBuyer(patchProductReq);
+            } else{ //유효하지 않은 상태값
+                throw new BaseException(PATCH_PRODUCTS_INVALID_STATUS);
             }
         } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
             throw new BaseException(DATABASE_ERROR);
@@ -93,13 +73,38 @@ public class ProductService {
     }
 
 
+    // 상품 구매자 수정
+    public void modifyProductBuyer(PatchProductReq patchProductReq) throws BaseException {
+        try {
+            if (productDao.getProduct(patchProductReq.getProductIdx()).getStatus().equals(ProductStatus.active.toString())){
+                throw new BaseException(PATCH_PRODUCTS_ACTIVE_STATUS); //구매자 변경 불가 상태 (active)
+            }
+            int result = productDao.modifyProductBuyer(patchProductReq); // 해당 과정이 무사히 수행되면 True(1), 그렇지 않으면 False(0)입니다.
+            if (result == 0) { // result값이 0이면 과정이 실패한 것이므로 에러 메서지를 보냅니다.
+                throw new BaseException(MODIFY_FAIL_BUYER); //변경 실패
+            }
+        } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    public void pullUpProduct(int productIdx) throws BaseException {
+        try{
+            int result = productDao.pullUpProduct(productIdx);
+            if (result == 0) { // result값이 0이면 과정이 실패한 것이므로 에러 메서지를 보냅니다.
+                throw new BaseException(PULL_UP_FAIL); //변경 실패
+            }
+        } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
 
     // 해당 productIdx를 갖는 Product 삭제
-    public int deleteProduct(int productIdx) throws BaseException{
+    public void deleteProduct(int productIdx) throws BaseException{
         try {
-            int deleteProductCnt = productDao.deleteProduct(productIdx);
+            productDao.deleteProduct(productIdx);
             imageService.deleteProductImage(productIdx); // 해당 상품 이미지 전체 삭제
-            return deleteProductCnt;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }

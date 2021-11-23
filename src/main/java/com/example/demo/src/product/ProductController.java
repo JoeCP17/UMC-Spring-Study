@@ -3,11 +3,6 @@ package com.example.demo.src.product;
 import com.example.demo.config.BaseException;
 import com.example.demo.config.BaseResponse;
 import com.example.demo.src.product.model.*;
-import com.example.demo.src.transaction.TransactionProvider;
-import com.example.demo.src.transaction.TransactionService;
-import com.example.demo.src.transaction.model.PatchTransactionReq;
-import com.example.demo.src.transaction.model.PostTransactionReq;
-import com.example.demo.src.transaction.model.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,16 +19,10 @@ public class ProductController {
     private final ProductProvider productProvider;
     @Autowired
     private final ProductService productService;
-    @Autowired
-    private final TransactionProvider transactionProvider;
-    @Autowired
-    private final TransactionService transactionService;
 
-    public ProductController(ProductProvider productProvider, ProductService productService, TransactionProvider transactionProvider, TransactionService transactionService){
+    public ProductController(ProductProvider productProvider, ProductService productService){
         this.productProvider = productProvider;
         this.productService = productService;
-        this.transactionProvider = transactionProvider;
-        this.transactionService = transactionService;
     }
 
     /**
@@ -118,30 +107,7 @@ public class ProductController {
         try {
             // 판매중으로 변경
             String status = product.getStatus();
-            if (status.equals(ProductStatus.active.toString())) {
-                // 거래 테이블에 있으면 삭제
-                if (transactionProvider.checkProduct(productIdx) != 0) {
-                    transactionService.deleteTransactionByProduct(productIdx);
-                }
-            } else if (status.equals(ProductStatus.reserved.toString()) | status.equals(ProductStatus.completed.toString())) {
-                // 예약중 or 판매완료로 변경
-                if (transactionProvider.checkProduct(productIdx) == 0) {
-                    PostTransactionReq postTransactionReq = new PostTransactionReq(productIdx, status);
-                    transactionService.createTransaction(postTransactionReq);
-                } else { // 있으면 수정
-                    Transaction transaction = transactionProvider.getTransactionIdxByProduct(productIdx);
-                    PatchTransactionReq patchTransactionReq = new PatchTransactionReq(
-                            transaction.getProductIdx(),
-                            status
-                    );
-                    transactionService.modifyTransactionStatus(patchTransactionReq);
-                }
-            } else { // 잘못된 상태값
-                String result = "잘못된 상태값입니다.";
-                return new BaseResponse<>(result);
-            }
-            PatchProductReq patchProductReq = new PatchProductReq(productIdx, status);
-            productService.modifyProductStatus(patchProductReq);
+            productService.modifyProductStatus(new PatchProductReq(productIdx, status));
             String result = "상품 상태가 수정되었습니다.";
             return new BaseResponse<>(result);
         } catch (BaseException exception) {
@@ -149,7 +115,40 @@ public class ProductController {
         }
     }
 
+    /**
+     * 상품 구매자 변경 API
+     * [PATCH] /app/products/:productIdx/buyer
+     */
+    //body
+    @ResponseBody
+    @PatchMapping("/{productIdx}/buyer")
+    public BaseResponse<String> modifyProductBuyer(@PathVariable("productIdx") int productIdx, @RequestBody Product product) {
+        try {
+            int buyer = product.getBuyer();
+            productService.modifyProductBuyer(new PatchProductReq(productIdx, buyer));
+            String result = "상품 구매자가 수정되었습니다.";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
 
+    /**
+     * 상품 끌어올리기 (pullUpAt 변경)
+     * [PATCH] /app/products/:productIdx/pullup
+     */
+    //body
+    @ResponseBody
+    @PatchMapping("/{productIdx}/pull-up")
+    public BaseResponse<String> pullUpProduct(@PathVariable("productIdx") int productIdx) {
+        try {
+            productService.pullUpProduct(productIdx);
+            String result = "끌어올려졌습니다.";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
 
     /**
      * 상품 삭제 API

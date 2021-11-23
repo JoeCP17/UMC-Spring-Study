@@ -1,7 +1,6 @@
 package com.example.demo.src.product;
 
 import com.example.demo.config.BaseException;
-import com.example.demo.src.image.ImageDao;
 import com.example.demo.src.image.ImageProvider;
 import com.example.demo.src.product.model.GetProductPreviewRes;
 import com.example.demo.src.product.model.GetProductRes;

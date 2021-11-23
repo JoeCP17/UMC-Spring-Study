@@ -3,7 +3,6 @@ package com.example.demo.src.product.model;
 import com.example.demo.src.image.model.GetImageRes;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.math.BigDecimal;
@@ -26,7 +25,8 @@ public class GetProductRes {
     private String categoryName;
     private List<GetImageRes> productImgList;
     private String title;
-    private Timestamp updateAt;
+    private Timestamp pullUpAt;
+    private int pullUpCnt;
     private String status;
     private String content;
     private int price;

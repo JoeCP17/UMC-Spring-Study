@@ -18,7 +18,9 @@ public class Product {
     private int price;
     private String content;
     private String status;
+    private int buyer;
     private Timestamp createAt;
     private Timestamp updateAt;
-
+    private Timestamp pullUpAt;
+    private int pullUpCnt;
 }
