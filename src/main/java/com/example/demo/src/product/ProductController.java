@@ -3,12 +3,15 @@ package com.example.demo.src.product;
 import com.example.demo.config.BaseException;
 import com.example.demo.config.BaseResponse;
 import com.example.demo.src.product.model.*;
+import com.example.demo.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.example.demo.config.BaseResponseStatus.INVALID_USER_JWT;
 
 @RestController
 @RequestMapping("/app/products")
@@ -19,10 +22,13 @@ public class ProductController {
     private final ProductProvider productProvider;
     @Autowired
     private final ProductService productService;
+    @Autowired
+    private final JwtService jwtService;
 
-    public ProductController(ProductProvider productProvider, ProductService productService){
+    public ProductController(ProductProvider productProvider, ProductService productService, JwtService jwtService){
         this.productProvider = productProvider;
         this.productService = productService;
+        this.jwtService = jwtService;
     }
 
     /**
@@ -34,6 +40,12 @@ public class ProductController {
     @PostMapping("")
     public BaseResponse<PostProductRes> createProduct(@RequestBody PostProductReq postProductReq){
         try {
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(postProductReq.getUserIdx() != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             PostProductRes postProductRes = productService.createProduct(postProductReq);
             return new BaseResponse<>(postProductRes);
         } catch (BaseException exception) {
@@ -50,6 +62,12 @@ public class ProductController {
     @PutMapping("/{productIdx}")
     public BaseResponse<String> modifyProduct(@PathVariable("productIdx") int productIdx, @RequestBody PostProductReq postProductReq){
         try {
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 변경하려는 상품의 userIdx 같은지 확인
+            if(productProvider.getProduct(productIdx).getUserIdx() != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             productService.modifyProduct(productIdx, postProductReq);
             String result = "상품정보가 수정되었습니다.";
             return new BaseResponse<>(result);
@@ -105,6 +123,12 @@ public class ProductController {
     @PatchMapping("/{productIdx}/status")
     public BaseResponse<String> modifyProductStatus(@PathVariable("productIdx") int productIdx, @RequestBody Product product) {
         try {
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 변경하려는 상품의 userIdx 같은지 확인
+            if(productProvider.getProduct(productIdx).getUserIdx() != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             // 판매중으로 변경
             String status = product.getStatus();
             productService.modifyProductStatus(new PatchProductReq(productIdx, status));
@@ -124,6 +148,12 @@ public class ProductController {
     @PatchMapping("/{productIdx}/buyer")
     public BaseResponse<String> modifyProductBuyer(@PathVariable("productIdx") int productIdx, @RequestBody Product product) {
         try {
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 변경하려는 상품의 userIdx 같은지 확인
+            if(productProvider.getProduct(productIdx).getUserIdx() != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             int buyer = product.getBuyer();
             productService.modifyProductBuyer(new PatchProductReq(productIdx, buyer));
             String result = "상품 구매자가 수정되었습니다.";
@@ -142,6 +172,12 @@ public class ProductController {
     @PatchMapping("/{productIdx}/pull-up")
     public BaseResponse<String> pullUpProduct(@PathVariable("productIdx") int productIdx) {
         try {
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 변경하려는 상품의 userIdx 같은지 확인
+            if(productProvider.getProduct(productIdx).getUserIdx() != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             productService.pullUpProduct(productIdx);
             String result = "끌어올려졌습니다.";
             return new BaseResponse<>(result);
@@ -158,6 +194,12 @@ public class ProductController {
     @DeleteMapping("/{productIdx}")
     public BaseResponse<String> deleteUser(@PathVariable("productIdx") int productIdx) {
         try {
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 변경하려는 상품의 userIdx 같은지 확인
+            if(productProvider.getProduct(productIdx).getUserIdx() != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             productService.deleteProduct(productIdx);
             String result = "삭제되었습니다.";
             return new BaseResponse<>(result);
@@ -183,7 +225,7 @@ public class ProductController {
 
 
     /**
-     * 특정 판매자의 구매 내역 조회
+     * 특정 판매자의 판매 내역 조회
      * [GET] /app/products/seller/:userIdx
      */
     @ResponseBody

@@ -67,8 +67,10 @@ public enum BaseResponseStatus {
 
     //products
     PATCH_PRODUCTS_ACTIVE_STATUS(false, 4021, "판매중인 상품입니다."),
-    MODIFY_FAIL_BUYER(false, 4022, "구매자 수정에 실패하였습니다."),
-    PULL_UP_FAIL(false, 4023, "상품 끌어올리기에 실패하였습니다.");
+
+    MODIFY_FAIL_PRODUCT_STATUS(false, 4024, "상품 상태 변경에 실패하였습니다."),
+    MODIFY_FAIL_BUYER(false, 4025, "구매자 수정에 실패하였습니다."),
+    PULL_UP_FAIL(false, 4026, "상품 끌어올리기에 실패하였습니다.");
 
 
     // 5000 : 필요시 만들어서 쓰세요

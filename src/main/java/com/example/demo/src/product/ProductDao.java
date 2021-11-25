@@ -57,6 +57,12 @@ public class ProductDao {
         return this.jdbcTemplate.update(modifyProductQuery, modifyProductParams);
     }
 
+    // 탈퇴한 회원의 상품 상태 수정
+    public int withdrawProduct(int userIdx) {
+        String modifyProductQuery = "update Product set status='withdraw' where userIdx=?"; // 실행될 동적 쿼리문
+        return this.jdbcTemplate.update(modifyProductQuery, userIdx);
+    }
+
 
     //전체 상품 조회
     public List<GetProductPreviewRes> getProductPreviews(){
@@ -156,6 +162,7 @@ public class ProductDao {
         int getProductParams = productIdx;
         return this.jdbcTemplate.update(deleteUserQuery, getProductParams);
     }
+
 
     // 특정 판매자의 판매 내역 조회
     public List<GetProductPreviewRes> getProductsBySeller(int userIdx){

@@ -21,7 +21,7 @@ public class ImageDao {
 
     // 상품 이미지 등록
     public int createProductImage(PostImageReq postImageReq){
-        String createProductImageQuery = "insert into Image (imgUrl, imgCategory, productIdx) VALUES (?,?,?)";
+        String createProductImageQuery = "Insert into Image (imgUrl, imgCategory, productIdx) VALUES (?,?,?)";
         Object[] createImageParams = new Object[]{postImageReq.getImgUrl(), "product", postImageReq.getIdx()}; // 동적 쿼리의 ?부분에 주입될 값
         this.jdbcTemplate.update(createProductImageQuery, createImageParams);
         String lastInserIdQuery = "select last_insert_id()"; // 가장 마지막에 삽입된(생성된) id값은 가져온다.

@@ -2,6 +2,7 @@ package com.example.demo.src.user;
 
 import com.example.demo.src.image.ImageService;
 import com.example.demo.src.image.model.PostImageReq;
+import com.example.demo.src.product.ProductService;
 import com.example.demo.utils.ValidationRegex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,13 +46,16 @@ public class UserController {
     @Autowired
     private final ImageService imageService;
     @Autowired
-    private final JwtService jwtService; // JWT부분은 7주차에 다루므로 모르셔도 됩니다!
+    private final ProductService productService;
+    @Autowired
+    private final JwtService jwtService;
 
 
-    public UserController(UserProvider userProvider, UserService userService, ImageService imageService, JwtService jwtService) {
+    public UserController(UserProvider userProvider, UserService userService, ImageService imageService, ProductService productService,JwtService jwtService) {
         this.userProvider = userProvider;
         this.userService = userService;
         this.imageService = imageService;
+        this.productService = productService;
         this.jwtService = jwtService; // JWT부분은 7주차에 다루므로 모르셔도 됩니다!
     }
 
@@ -219,7 +223,7 @@ public class UserController {
             if(userIdx != userIdxByJwt){
                 return new BaseResponse<>(INVALID_USER_JWT);
             }
-            int withdrawUserCnt = userService.withdraw(userIdx);
+            int withdrawUserCnt = userService.withdraw(userIdx); // 회원 탈퇴
             return new BaseResponse<>(withdrawUserCnt);
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());

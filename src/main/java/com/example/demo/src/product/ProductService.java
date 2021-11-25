@@ -46,7 +46,7 @@ public class ProductService {
     public void modifyProduct(int productIdx, PostProductReq postProductReq) throws BaseException {
         try {
             productDao.modifyProduct(productIdx, postProductReq); // 상품 정보 수정
-            imageService.modifyProductImage(productIdx, postProductReq.getImgUrlList()); //이미지 수정
+            imageService.modifyProductImage(productIdx, postProductReq.getImgUrlList()); // 이미지 수정
         } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
             throw new BaseException(DATABASE_ERROR);
         }
@@ -54,38 +54,45 @@ public class ProductService {
 
     // 상품 상태 수정
     public void modifyProductStatus(PatchProductReq patchProductReq) throws BaseException {
-        try {
-            String status = patchProductReq.getStatus();
-            // 상태는 acitve, reserved, completed 만 가능
-            if(status.equals(ProductStatus.active.toString()) || status.equals(ProductStatus.reserved.toString()) || status.equals(ProductStatus.completed.toString())){
-                int result = productDao.modifyProductStatus(patchProductReq); // 해당 과정이 무사히 수행되면 True(1), 그렇지 않으면 False(0)입니다.
-                if (result == 0) { // result값이 0이면 과정이 실패한 것이므로 에러 메서지를 보냅니다.
-                    throw new BaseException(MODIFY_FAIL_USERNAME);
-                }
-                // buyer 에 0 삽입
-                productDao.modifyProductBuyer(patchProductReq);
-            } else{ //유효하지 않은 상태값
-                throw new BaseException(PATCH_PRODUCTS_INVALID_STATUS);
+        String status = patchProductReq.getStatus();
+        // 상태는 acitve, reserved, completed 만 가능
+        if(status.equals(ProductStatus.active.toString()) || status.equals(ProductStatus.reserved.toString()) || status.equals(ProductStatus.completed.toString())){
+            int result = productDao.modifyProductStatus(patchProductReq); // 해당 과정이 무사히 수행되면 True(1), 그렇지 않으면 False(0)입니다.
+            if (result == 0) { // result값이 0이면 과정이 실패한 것이므로 에러 메서지를 보냅니다.
+                throw new BaseException(MODIFY_FAIL_PRODUCT_STATUS);
             }
-        } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
-            throw new BaseException(DATABASE_ERROR);
+            // buyer 에 0 삽입
+            try{
+                productDao.modifyProductBuyer(patchProductReq);
+            } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
+                throw new BaseException(DATABASE_ERROR);
+            }
+        } else { //유효하지 않은 상태값
+            throw new BaseException(PATCH_PRODUCTS_INVALID_STATUS);
         }
     }
 
 
     // 상품 구매자 수정
     public void modifyProductBuyer(PatchProductReq patchProductReq) throws BaseException {
+        String status = "";
+        try{
+            status = productDao.getProduct(patchProductReq.getProductIdx()).getStatus();
+        } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
+            throw new BaseException(DATABASE_ERROR);
+        }
+        if (status.equals(ProductStatus.active.toString())){
+            throw new BaseException(PATCH_PRODUCTS_ACTIVE_STATUS); //구매자 변경 불가 상태 (active)
+        }
         try {
-            if (productDao.getProduct(patchProductReq.getProductIdx()).getStatus().equals(ProductStatus.active.toString())){
-                throw new BaseException(PATCH_PRODUCTS_ACTIVE_STATUS); //구매자 변경 불가 상태 (active)
-            }
             int result = productDao.modifyProductBuyer(patchProductReq); // 해당 과정이 무사히 수행되면 True(1), 그렇지 않으면 False(0)입니다.
             if (result == 0) { // result값이 0이면 과정이 실패한 것이므로 에러 메서지를 보냅니다.
                 throw new BaseException(MODIFY_FAIL_BUYER); //변경 실패
             }
-        } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
-            throw new BaseException(DATABASE_ERROR);
         }
+         catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
+                throw new BaseException(DATABASE_ERROR);
+            }
     }
 
     public void pullUpProduct(int productIdx) throws BaseException {

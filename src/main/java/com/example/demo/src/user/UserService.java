@@ -3,6 +3,7 @@ package com.example.demo.src.user;
 
 import com.example.demo.config.BaseException;
 import com.example.demo.config.secret.Secret;
+import com.example.demo.src.product.ProductDao;
 import com.example.demo.src.user.model.*;
 import com.example.demo.utils.AES128;
 import com.example.demo.utils.JwtService;
@@ -30,14 +31,15 @@ public class UserService {
     private final UserDao userDao;
     private final UserProvider userProvider;
     private final JwtService jwtService; // JWT부분은 7주차에 다루므로 모르셔도 됩니다!
+    private final ProductDao productDao;
 
 
     @Autowired //readme 참고
-    public UserService(UserDao userDao, UserProvider userProvider, JwtService jwtService) {
+    public UserService(UserDao userDao, UserProvider userProvider, JwtService jwtService, ProductDao productDao) {
         this.userDao = userDao;
         this.userProvider = userProvider;
-        this.jwtService = jwtService; // JWT부분은 7주차에 다루므로 모르셔도 됩니다!
-
+        this.jwtService = jwtService;
+        this.productDao = productDao;
     }
     // ******************************************************************************
     // 회원가입(POST)
@@ -92,6 +94,7 @@ public class UserService {
     public int withdraw(int userIdx) throws BaseException{
         try {
             int withdrawUserCnt = userDao.withdraw(userIdx);
+            productDao.withdrawProduct(userIdx); // 해당 유저의 상품 상태 변경
             return withdrawUserCnt;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
