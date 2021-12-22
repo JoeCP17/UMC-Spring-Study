@@ -39,9 +39,9 @@ public class ProductProvider {
     }
 
     // 전체 상품 미리보기 조회
-    public List<GetProductPreviewRes> getAllProducts() throws BaseException {
+    public List<GetProductPreviewRes> getAllProducts(int page, int size) throws BaseException {
         try{
-            List<GetProductPreviewRes> getProductPreviewResList = productDao.getProductPreviews();
+            List<GetProductPreviewRes> getProductPreviewResList = productDao.getProductPreviews(page, size);
             for (GetProductPreviewRes getProductPreviewRes : getProductPreviewResList) {
                 getProductPreviewRes.setProductImgUrl(imageProvider.getOneProductImage(getProductPreviewRes.getProductIdx()));
             }
@@ -52,9 +52,9 @@ public class ProductProvider {
     }
 
     // 해당 제목을 갖는 상품 조회
-    public List<GetProductPreviewRes> getProductsByTitle(String title) throws BaseException {
+    public List<GetProductPreviewRes> getProductsByTitle(String title,int page, int size) throws BaseException {
         try {
-            List<GetProductPreviewRes> getProductPreviewResList = productDao.getProductListByTitle(title);
+            List<GetProductPreviewRes> getProductPreviewResList = productDao.getProductListByTitle(title,page,size);
             for (GetProductPreviewRes getProductPreviewRes : getProductPreviewResList) {
                 getProductPreviewRes.setProductImgUrl(imageProvider.getOneProductImage(getProductPreviewRes.getProductIdx()));
             }
@@ -91,9 +91,9 @@ public class ProductProvider {
     }
 
     // 판매중인 상품만 조회
-    public List<GetProductPreviewRes> getActiveProducts() throws BaseException {
+    public List<GetProductPreviewRes> getActiveProducts(int page, int size) throws BaseException {
         try {
-            List<GetProductPreviewRes> getProductPreviewResList = productDao.getActiveProductList();
+            List<GetProductPreviewRes> getProductPreviewResList = productDao.getActiveProductList(page, size);
             for (GetProductPreviewRes getProductPreviewRes : getProductPreviewResList) {
                 getProductPreviewRes.setProductImgUrl(imageProvider.getOneProductImage(getProductPreviewRes.getProductIdx()));
             }

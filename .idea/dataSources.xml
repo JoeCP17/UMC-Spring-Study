@@ -7,5 +7,14 @@
       <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
       <jdbc-url>jdbc:mysql://forclass.c8ydsrovkrwj.ap-northeast-2.rds.amazonaws.com:3306/test</jdbc-url>
     </data-source>
+    <data-source source="LOCAL" name="demo.main/Hibernate" uuid="f2062ebc-e21b-4b9a-a686-9e370b4d9dbb">
+      <driver-ref>mysql.8</driver-ref>
+      <synchronize>true</synchronize>
+      <imported>true</imported>
+      <remarks>Hibernate</remarks>
+      <jdbc-driver>com.mysql.cj.jdbc.Driver</jdbc-driver>
+      <jdbc-url>jdbc:mysql://umc-study.cdikwagdmoqi.ap-northeast-2.rds.amazonaws.com:3306/UMC</jdbc-url>
+      <working-dir>$ProjectFileDir$</working-dir>
+    </data-source>
   </component>
 </project>

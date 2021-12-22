@@ -85,14 +85,16 @@ public class ProductController {
      */
     @ResponseBody
     @GetMapping("")
-    public BaseResponse<List<GetProductPreviewRes>> getProduct(@RequestParam(required = false) String search){
+    public BaseResponse<List<GetProductPreviewRes>> getProduct(@RequestParam(required = false) String search,
+                                                               @RequestParam(required = false, defaultValue = "1") int page,
+                                                               @RequestParam(required = false, defaultValue = "10") int size){
         try {
             if (search == null) { // query string인 search가 없을 경우, 그냥 전체 상품정보를 불러온다.
-                List<GetProductPreviewRes> getProductPreviewResList = productProvider.getAllProducts();
+                List<GetProductPreviewRes> getProductPreviewResList = productProvider.getAllProducts(page,size);
                 return new BaseResponse<>(getProductPreviewResList);
             }
             // query string인 search가 있을 경우, title 에서 검색한다..
-            List<GetProductPreviewRes> getProductPreviewResList = productProvider.getProductsByTitle(search);
+            List<GetProductPreviewRes> getProductPreviewResList = productProvider.getProductsByTitle(search,page,size);
             return new BaseResponse<>(getProductPreviewResList);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
@@ -105,9 +107,10 @@ public class ProductController {
      */
     @ResponseBody
     @GetMapping("/active")
-    public BaseResponse<List<GetProductPreviewRes>> getActiveProduct(){
+    public BaseResponse<List<GetProductPreviewRes>> getActiveProduct(@RequestParam(required = false, defaultValue = "1") int page,
+                                                                     @RequestParam(required = false, defaultValue = "10")int size){
         try {
-            List<GetProductPreviewRes> productListRes = productProvider.getActiveProducts();
+            List<GetProductPreviewRes> productListRes = productProvider.getActiveProducts(page,size);
             return new BaseResponse<>(productListRes);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));

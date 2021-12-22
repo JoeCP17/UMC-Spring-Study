@@ -65,11 +65,13 @@ public class ProductDao {
 
 
     //전체 상품 조회
-    public List<GetProductPreviewRes> getProductPreviews(){
+    public List<GetProductPreviewRes> getProductPreviews(int page, int size){
         String getProductsQuery = "select P.productIdx, P.title, U.userDong, P.status, P.pullUpAt, P.pullUpCnt, P.price " +
                 "from Product P join User U " +
                 "on P.userIdx = U.userIdx " +
-                "order by P.pullUpAt DESC";
+                "order by P.pullUpAt DESC " +
+                "limit ?, ?";
+        Object[] getProductParams = new Object[]{(page-1)*size, size};
 
         return this.jdbcTemplate.query(getProductsQuery,
                 (rs, rowNum) -> new GetProductPreviewRes(
@@ -80,18 +82,18 @@ public class ProductDao {
                         rs.getString("status"),
                         rs.getTimestamp("pullUpAt"),
                         rs.getInt("pullUpCnt"),
-                        rs.getInt("price")));
+                        rs.getInt("price")),getProductParams);
     }
 
     //상품 title 로 검색 (포함)
-    public List<GetProductPreviewRes> getProductListByTitle(String title){
+    public List<GetProductPreviewRes> getProductListByTitle(String title, int page, int size){
         String getProductsQuery =  "select P.productIdx, P.title, U.userDong, P.status, P.pullUpAt, P.pullUpCnt, P.price "+
                 "from Product P join User U "+
                 "on P.userIdx = U.userIdx "+
                 "where title Like ? "+
-                "ORDER BY P.pullUpAt DESC";
-
-        String getProductTitleParams = "%" + title + "%";
+                "ORDER BY P.pullUpAt DESC " +
+                "limit ?, ?";
+        Object[] getProductTitleParams = new Object[]{"%"+title+"%", (page-1)*size, size};
         return this.jdbcTemplate.query(getProductsQuery,
                 (rs, rowNum) -> new GetProductPreviewRes(
                         rs.getInt("productIdx"),
@@ -105,12 +107,14 @@ public class ProductDao {
     }
 
     //현재 판매중인 상품만 조회
-    public List<GetProductPreviewRes> getActiveProductList(){
+    public List<GetProductPreviewRes> getActiveProductList(int page, int size){
         String getProductsQuery = "select P.productIdx, P.title, U.userDong, P.status, P.pullUpAt, P.pullUpCnt, P.price " +
                 "from Product P join User U " +
                 "on P.userIdx = U.userIdx " +
                 "where P.status = 'active' " +
-                "order by P.pullUpAt desc";
+                "order by P.pullUpAt desc " +
+                "limit ?, ?";
+        Object[] getProductParams = new Object[]{(page-1)*size, size};
 
         return this.jdbcTemplate.query(getProductsQuery,
                 (rs, rowNum) -> new GetProductPreviewRes(
@@ -121,7 +125,7 @@ public class ProductDao {
                         rs.getString("status"),
                         rs.getTimestamp("pullUpAt"),
                         rs.getInt("pullUpCnt"),
-                        rs.getInt("price")));
+                        rs.getInt("price")),getProductParams);
     }
 
     //상품 상세 조회
